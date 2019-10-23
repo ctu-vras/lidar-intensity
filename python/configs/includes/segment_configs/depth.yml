@@ -1,0 +1,10 @@
+model:
+  squeeze_kwargs:
+    input_channels: 5
+  head_kwargs:
+    crf_dims: 4
+pass_keys:
+  - depth
+  - xyz
+  - mask
+store_dir: d

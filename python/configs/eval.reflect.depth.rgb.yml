@@ -1,0 +1,13 @@
+- includes/common.yml
+- includes/kittidata/basedata.yml
+- includes/kittidata/only_mid.yml
+- includes/kittidata/channels/depth.yml
+- includes/kittidata/channels/intensity_bin.yml
+- includes/kittidata/channels/intensity_dist.yml
+- includes/kittidata/channels/intensity.yml
+- includes/kittidata/channels/rgb.yml
+- includes/kittidata/channels/rgb_mask.yml
+- includes/kittidata/channels/mask.yml
+- includes/reflect_configs/model.yml
+- includes/reflect_configs/depth.rgb.yml
+- includes/reflect_configs/eval.yml

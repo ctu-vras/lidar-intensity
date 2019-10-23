@@ -1,0 +1,8 @@
+image_fn:
+  reflect: False
+  ignore_index: 4
+base_save: eval99
+train_save: train
+val_save: val
+checkpoint: 099.tar
+keep_ram: False

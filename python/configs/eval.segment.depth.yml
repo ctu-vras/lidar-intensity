@@ -1,0 +1,10 @@
+- includes/common.yml
+- includes/kittidata/basedata.yml
+- includes/kittidata/segment_data.yml
+- includes/kittidata/channels/depth.yml
+- includes/kittidata/channels/xyz.yml
+- includes/kittidata/channels/labels.yml
+- includes/kittidata/channels/mask.yml
+- includes/segment_configs/model.yml
+- includes/segment_configs/depth.yml
+- includes/segment_configs/eval.yml

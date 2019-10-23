@@ -1,0 +1,25 @@
+model:
+  head_cls: SegmentHead
+  squeeze_kwargs:
+    squeeze_depth: 3
+    cam_depth: 1
+    conv_starts: 64
+    squeeze_start: 16
+    ef_start: 64
+  head_kwargs:
+    in_channels: 64
+    mid_channels: 32
+    num_classes: 4
+    crf_iters: 3
+    crf_start_dim: 0
+gt_keys:
+  - labels
+  - mask
+loss:
+  reflect: False
+  gamma: 2
+  ignore_index: 4
+info_fn:
+  reflect: False
+  ignore_index: 4
+base_dir: /mnt/data/vras/Reflectance/model/segment-best/
