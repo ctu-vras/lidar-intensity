@@ -9,8 +9,16 @@ Here we will make codes and datasets available
 - [ ] GTA codes (from Matěj + ours)
 - [ ] GTA README
 - [ ] Full README
-    ### [ ] Dataset URL ###
-    - [Grid version](https://login.rci.cvut.cz/data/lidar_intensity/grid/geometry/000000.npy)
-    - []
-    - [Point cloud version](https://login.rci.cvut.cz/data/lidar_intensity/pcl/geometry/000000.npy)
-    - [ ] How to run everything
+    ### Dataset URL ###
+    #### Grid version #### 
+    - [geometry](https://login.rci.cvut.cz/data/lidar_intensity/grid/geometry/geometry.tar.gz)
+    - [intensity](https://login.rci.cvut.cz/data/lidar_intensity/grid/geometry/intensity.tar.gz)
+    - [color](https://login.rci.cvut.cz/data/lidar_intensity/grid/geometry/color.tar.gz)
+    
+    
+    #### Point cloud version ####
+    - [geometry](https://login.rci.cvut.cz/data/lidar_intensity/pcl/geometry/geometry.tar.gz)
+    - [intensity](https://login.rci.cvut.cz/data/lidar_intensity/pcl/geometry/intensity.tar.gz)
+    - [color](https://login.rci.cvut.cz/data/lidar_intensity/pcl/geometry/color.tar.gz)
+    
+    #### How to run everything ####
