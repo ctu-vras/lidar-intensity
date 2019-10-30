@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Theme Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" rel="stylesheet">
+
+    <!-- for timepicker -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/clockpicker/0.0.7/jquery-clockpicker.min.css"/>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="container theme-showcase" role="main">
+
+    <div id="alerts"></div>
+
+    <div id="commands">
+        <button type="button" class="btn btn-primary" id="START_SESSION">START_SESSION</button>
+        <button type="button" class="btn btn-primary" id="STOP_SESSION">STOP_SESSION</button>
+        <button type="button" class="btn btn-primary" id="TOGGLE_AUTODRIVE">TOGGLE_AUTODRIVE</button>
+        <button type="button" class="btn btn-primary" id="ENTER_VEHICLE">ENTER_VEHICLE</button>
+        <button type="button" class="btn btn-primary" id="AUTOSTART">AUTOSTART</button>
+        <button type="button" class="btn btn-primary" id="RELOADGAME">RELOADGAME</button>
+        <button type="button" class="btn btn-primary" id="RELOAD">RELOAD</button>
+        <button type="button" class="btn btn-primary" id="PAUSE">PAUSE</button>
+        <button type="button" class="btn btn-primary" id="UNPAUSE">UNPAUSE</button>
+    </div>
+    <div class="form-group col-xs-4 col-sm-4 col-lg-4" id="time">
+        <label for="time-picker">Time</label>
+        <input id="time-picker" type="text" class="form-control" name="time-picker"/>
+        <button type="button" class="btn btn-primary" id="SET_TIME">SET_TIME</button>
+    </div>
+    <div class="form-group col-xs-4 col-sm-4 col-lg-4" id="weather">
+        <label for="weather-picker">Weather</label>
+        <select class="form-control" id="weather-picker">
+            <option>Unknown</option>
+            <option>ExtraSunny</option>
+            <option>Clear</option>
+            <option>Clouds</option>
+            <option>Smog</option>
+            <option>Foggy</option>
+            <option>Overcast</option>
+            <option>Raining</option>
+            <option>ThunderStorm</option>
+            <option>Clearing</option>
+            <option>Neutral</option>
+            <option>Snowing</option>
+            <option>Blizzard</option>
+            <option>Snowlight</option>
+            <option>Christmas</option>
+            <option>Halloween</option>
+        </select>
+        <button type="button" class="btn btn-primary" id="SET_WEATHER">SET_WEATHER</button>
+    </div>
+    <div class="form-group col-xs-4 col-sm-4 col-lg-4" id="time-interval">
+        <label for="interval-from-picker">Time from</label>
+        <input id="interval-from-picker" type="text" class="form-control" name="from-picker"/>
+        <label for="interval-to-picker">Time to</label>
+        <input id="interval-to-picker" type="text" class="form-control" name="to-picker"/>
+        <button type="button" class="btn btn-primary" id="SET_TIME_INTERVAL">SET_TIME_INTERVAL</button>
+    </div>
+
+
+</div> <!-- /container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="https://maxcdn.bootstrapcdn.com/js/ie10-viewport-bug-workaround.js"></script>
+
+<!-- for moment.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.2/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.2/locale/en-gb.js"></script>
+
+<!-- for timepicker -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clockpicker/0.0.7/jquery-clockpicker.min.js"></script>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    function create_alert(text, type) {
+        var id = Math.random().toString(36).substring(7);
+        var alertHtml = '<div class="alert alert-' + type + ' alert-dismissable" role="alert" style="display: none">' +
+            '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span></span>' +
+            '</div>';
+        var html = $($.parseHTML(alertHtml)[0]);
+        html.attr('id', id);
+        html.find('span').html(text);
+        $('#alerts').append(html);
+        $('#' + id).slideDown(500).delay(2000).slideUp(500, function () {
+            $('#' + id).remove();
+        });
+    }
+
+    function post(endpoint, text, data) {
+        console.log(text);
+        axios.post(endpoint, data).then(function (res) {
+            console.log('obtained response');
+            create_alert(text + ' command sent', 'success');
+        }).catch(function (err) {
+            create_alert('server not responding', 'danger');
+        });
+    }
+
+    (function () {
+        var server_name = window.location.hostname;
+        axios.defaults.baseURL = 'https://' + 'localhost' + ':5000';
+
+        $('#time-picker').clockpicker({'donetext': 'Done'});
+        $('#interval-from-picker').clockpicker({'donetext': 'Done'});
+        $('#interval-to-picker').clockpicker({'donetext': 'Done'});
+
+        $('#commands').find('button').each(function (i, element) {
+            element.onclick = function (e) {
+                var text = this.id;
+                post('/commands', text, {
+                    'command': text
+                });
+            };
+        });
+
+        $('#time').find('button').each(function (i, element) {
+            element.onclick = function (e) {
+                var text = this.id;
+                post('/command/time', text, {
+                    'time': $('#time-picker').val()
+                });
+            };
+        });
+
+        $('#weather').find('button').each(function (i, element) {
+            element.onclick = function (e) {
+                var text = this.id;
+                post('/command/weather', text, {
+                    'weather': $('#weather-picker').val()
+                });
+            };
+        });
+
+        $('#time-interval').find('button').each(function (i, element) {
+            element.onclick = function (e) {
+                var text = this.id;
+                post('/command/time_interval', text, {
+                    'time_from': $('#interval-from-picker').val(),
+                    'time_to': $('#interval-to-picker').val()
+                });
+            };
+        });
+    })();
+</script>
+
+</body>
+</html>

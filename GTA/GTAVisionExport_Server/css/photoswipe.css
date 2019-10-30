@@ -1,0 +1,56 @@
+.my-gallery {
+  width: 100%;
+  float: left;
+}
+.my-gallery img {
+  width: 100%;
+  height: auto;
+}
+.my-gallery figure {
+  display: block;
+  float: left;
+  margin: 0 5px 5px 0;
+  width: 150px;
+}
+.my-gallery figcaption {
+  display: none;
+}
+
+.paginationjs .paginationjs-my-button,.paginationjs .paginationjs-my-input {
+    float: left;
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+.paginationjs .paginationjs-my-input>input[type=text] {
+    width: 30px;
+    height: 28px;
+    background: #fff;
+    border-radius: 3px;
+    border: 1px solid #aaa;
+    padding: 0;
+    font-size: 14px;
+    text-align: center;
+    vertical-align: baseline;
+    outline: 0;
+    box-shadow: none;
+    box-sizing: initial
+}
+
+.paginationjs .paginationjs-my-button>input[type=submit] {
+    min-width: 40px;
+    height: 30px;
+    line-height: 28px;
+    background: #fff;
+    border-radius: 3px;
+    border: 1px solid #aaa;
+    text-align: center;
+    padding: 0 8px;
+    font-size: 14px;
+    vertical-align: baseline;
+    outline: 0;
+    box-shadow: none;
+    color: #333;
+    cursor: pointer;
+    vertical-align: middle\9
+}
