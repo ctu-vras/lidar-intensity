@@ -120,7 +120,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigUtils.cs" />
     <Compile Include="GdalConfiguration.cs" />
     <Compile Include="GTADataStructures.cs" />
     <Compile Include="HashFunctions.cs" />

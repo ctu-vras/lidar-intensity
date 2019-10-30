@@ -181,11 +181,6 @@ namespace GTAVisionExport
 
         public void drawCamerasBoxes()
         {
-//            WARNING, do not attempt to draw cameras as markes in their correct rotation. It does not work. 
-//            I spent lots of time trying to show cameras in their direction, but shit just doesn't work.
-//             3D boxes are enough I guess
-
-//            this shows white boxes where cameras are
             var curVehicle = Game.Player.Character.CurrentVehicle;
             var rot = curVehicle.Rotation;
             var rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
@@ -196,49 +191,13 @@ namespace GTAVisionExport
             for (var i = 0; i < CamerasList.cameras.Count; i++)
             {
                 var camPos = CamerasList.camerasPositions[i];
-//                var camRot = CamerasList.camerasRotations[i];
-
-//                var relRotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(camRot.X));
-//                var relRotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(camRot.Y));
-//                var relRotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(camRot.Z));
-//                var relRotMat = relRotZ * relRotY * relRotX;
-//                var relRotMat = relRotX * relRotY * relRotZ;
-
                 var camPosToCar = rotMat * new Vector3D(camPos.X, camPos.Y, camPos.Z);
-//                var camDirection = new Vector3D(rotMat * relRotMat * new Vector3D(0f, 0f, -1f));
-//                var camDirection = new Vector3D(relRotMat * new Vector3D(0f, 0f, -1f));
-//                var camDirection = new Vector3D(0f, 0f, -1f);
-//                var camDirection = new Vector3D(0, 0, 0);
-//                var camRotation = new Vector3D(0, 0, 0);
-//                var camRotation = CamerasList.rotationMatrixToDegrees(rotMat * relRotMat);
-//                var camRotation = Game.Player.Character.CurrentVehicle.Rotation;
-//                camRotation.X *= -1;
-//                camRotation.Y = - Game.Player.Character.CurrentVehicle.Rotation.X;
-//                camRotation.X = Game.Player.Character.CurrentVehicle.Rotation.Y;
-//                var camRotation = CamerasList.rotationMatrixToDegrees(relRotMat * rotMat);
-//                var camRotation = CamerasList.rotationMatrixToDegrees(Matrix3D.RotationAroundZAxis(Angle.FromDegrees(90)) * rotMat);
-//                var camRotation = new Vector3D(Matrix3D.RotationAroundZAxis(Angle.FromDegrees(90)) *
-//                                  new Vector3D(rot.X, rot.Y, rot.Z));
-//                var camRotation = CamerasList.rotationMatrixToDegrees(Matrix3D.RotationAroundXAxis(Angle.FromDegrees(-90)));
                 var absolutePosition = curVehicle.Position + new Vector3((float) camPosToCar[0], (float) camPosToCar[1],
                                            (float) camPosToCar[2]);
                 HashFunctions.Draw3DBox(absolutePosition, new Vector3(0.3f, 0.3f, 0.3f));
-//                Logger.WriteLine($"{i}-th cam vector rotation");
-//                Logger.WriteLine(camRotation);
-//                Logger.WriteLine($"{i}-th cam rotation matrix");
-//                Logger.WriteLine(relRotMat * rotMat);
-
-//                World.DrawMarker(MarkerType.ChevronUpx1, absolutePosition, 
-//                    new Vector3((float) camDirection.X, (float) camDirection.Y, (float) camDirection.Z), 
-//                    new Vector3((float) camRotation.X, (float) camRotation.Y, (float) camRotation.Z), 
-//                    new Vector3(1, 1, 1), Color.White);
-//
-//                HashFunctions.Draw2DText($"X:{camRotation.X:.##} Y:{camRotation.Y:.##} Z:{camRotation.Z:.##}", absolutePosition, Color.Red);
             }
 
             HashFunctions.Draw2DText($"X:{rot.X:.##} Y:{rot.Y:.##} Z:{rot.Z:.##}", curVehicle.Position, Color.Red);
-//            Logger.WriteLine("car vector rotation");
-//            Logger.WriteLine(Game.Player.Character.CurrentVehicle.Rotation);
         }
 
         private void drawAxesBoxesAround(Vector3 position)
