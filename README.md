@@ -16,6 +16,7 @@ Here we will make codes and datasets available
 - [intensity](https://login.rci.cvut.cz/data/lidar_intensity/grid/intensity.tar.gz)
 - [labels](https://login.rci.cvut.cz/data/lidar_intensity/grid/labels.tar.gz)
 - [color](https://login.rci.cvut.cz/data/lidar_intensity/grid/color.tar.gz)
+- [mask](https://login.rci.cvut.cz/data/lidar_intensity/grid/mask.tar.gz)
 
 
 ## Point cloud version
@@ -23,5 +24,6 @@ Here we will make codes and datasets available
 - [intensity](https://login.rci.cvut.cz/data/lidar_intensity/pcl/intensity.tar.gz)
 - [labels](https://login.rci.cvut.cz/data/lidar_intensity/pcl/labels.tar.gz)
 - [color](https://login.rci.cvut.cz/data/lidar_intensity/pcl/color.tar.gz)
+- [mask](https://login.rci.cvut.cz/data/lidar_intensity/pcl/mask.tar.gz)
 
 ## How to run everything
