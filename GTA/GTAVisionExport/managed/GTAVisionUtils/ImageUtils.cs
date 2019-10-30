@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
 
@@ -65,20 +63,18 @@ namespace GTAVisionUtils
                     Logger.WriteLine($"height: {height}");
                     Logger.WriteLine($"oneFile: {oneFile}");
 
-                    if (e is ArgumentException) {
+                    if (e is ArgumentException)
+                    {
 //                    probably some problem with tiff, logging info avout images
-                        if (colors.Count == 1) {
+                        if (colors.Count == 1)
                             Logger.WriteLine($"color size: {colors[0].Length}");
-                        }
-                        else {
-                            for (int i = 0; i < colors.Count; i++) {
+                        else
+                            for (var i = 0; i < colors.Count; i++)
                                 Logger.WriteLine($"{i}-th color size: {colors[i].Length}");
-                            }
-                        }
                         Logger.WriteLine($"depth size: {depth.Length}");
                         Logger.WriteLine($"stencil size: {stencil.Length}");
-                        
                     }
+
                     Logger.ForceFlush();
                     throw;
                 }

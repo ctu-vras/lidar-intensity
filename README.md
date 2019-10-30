@@ -1,16 +1,5 @@
 # Learning  to  predict  Lidar  intensities
-
-Here we will make codes and datasets available
-
-# TODO
-
-- [ ] GTA configs
-- [ ] Python Readme
-- [ ] GTA README
-- [ ] Full README
-
-
-## Dataset URL
+## Dataset for download
 ## Grid version
 - [geometry](https://login.rci.cvut.cz/data/lidar_intensity/grid/geometry.tar.gz)
 - [intensity](https://login.rci.cvut.cz/data/lidar_intensity/grid/intensity.tar.gz)
@@ -27,3 +16,16 @@ Here we will make codes and datasets available
 - [mask](https://login.rci.cvut.cz/data/lidar_intensity/pcl/mask.tar.gz)
 
 ## How to run everything
+
+GTA plugins are available in directory GTA. Please follow the instructions from the original [GTAVisionExport](https://github.com/umautobots/GTAVisionExport) repository to make it work.
+
+Some notable changes from the original repository:
+
+- 4 cameras which switch themselves sitting atop a car to simulate lidar, each with 65 VFOV (~91 HFOV)
+
+### TODO
+
+- [ ] GTA configs
+- [ ] Python Readme
+- [ ] GTA README
+- [ ] Full README

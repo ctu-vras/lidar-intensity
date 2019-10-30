@@ -30,27 +30,19 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Gdal = OSGeo.GDAL.Gdal;
-using Ogr = OSGeo.OGR.Ogr;
+using OSGeo.GDAL;
+using OSGeo.OGR;
 
 namespace GTAVisionUtils
 {
-    public static partial class GdalConfiguration
+    public static class GdalConfiguration
     {
         private static volatile bool _configuredOgr;
         private static volatile bool _configuredGdal;
 
-        /// <summary>
-        /// Function to determine which platform we're on
-        /// </summary>
-        private static string GetPlatform()
-        {
-            return IntPtr.Size == 4 ? "x86" : "x64";
-        }
-
 
         /// <summary>
-        /// Construction of Gdal/Ogr
+        ///     Construction of Gdal/Ogr
         /// </summary>
         static GdalConfiguration()
         {
@@ -88,7 +80,15 @@ namespace GTAVisionUtils
         }
 
         /// <summary>
-        /// Method to ensure the static constructor is being called.
+        ///     Function to determine which platform we're on
+        /// </summary>
+        private static string GetPlatform()
+        {
+            return IntPtr.Size == 4 ? "x86" : "x64";
+        }
+
+        /// <summary>
+        ///     Method to ensure the static constructor is being called.
         /// </summary>
         /// <remarks>Be sure to call this function before using Gdal/Ogr/Osr</remarks>
         public static void ConfigureOgr()
@@ -103,7 +103,7 @@ namespace GTAVisionUtils
         }
 
         /// <summary>
-        /// Method to ensure the static constructor is being called.
+        ///     Method to ensure the static constructor is being called.
         /// </summary>
         /// <remarks>Be sure to call this function before using Gdal/Ogr/Osr</remarks>
         public static void ConfigureGdal()
@@ -124,7 +124,7 @@ namespace GTAVisionUtils
             for (var i = 0; i < num; i++)
             {
                 var driver = Ogr.GetDriver(i);
-                Console.WriteLine(string.Format("OGR {0}: {1}", i, driver.name));
+                Console.WriteLine("OGR {0}: {1}", i, driver.name);
             }
 #endif
         }
@@ -136,7 +136,7 @@ namespace GTAVisionUtils
             for (var i = 0; i < num; i++)
             {
                 var driver = Gdal.GetDriver(i);
-                Console.WriteLine(string.Format("GDAL {0}: {1}-{2}", i, driver.ShortName, driver.LongName));
+                Console.WriteLine("GDAL {0}: {1}-{2}", i, driver.ShortName, driver.LongName);
             }
 #endif
         }
