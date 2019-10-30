@@ -203,8 +203,5 @@ cdef class LiDARParams:
 cdef:
     double[:] velodyne_vertical = np.concatenate((np.linspace(4 + (1.0 / 3), (-8 - 1.0 / 3), 40), np.linspace((-8 - 1.0 / 3 - 1.0 / 2), (-24 - 1.0 / 3), 32)))
     double[:] velodyne_horizontal = np.flip(np.arange(0, 360, 0.1728)) + 180
-    double[:] scala_vertical = np.linspace(3, 0, 4)
-    double[:] scala_horizontal = np.linspace(72.375, -72.375, 580) + 360
 
 velodyne_params = LiDARParams(0.9, 131.0, velodyne_vertical, velodyne_horizontal)
-scala_params = LiDARParams(0.5, 150, scala_vertical, scala_horizontal)

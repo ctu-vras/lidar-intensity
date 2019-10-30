@@ -177,9 +177,7 @@ class KittiEntry(ot.dataset.DatasetEntry):
         return pcl
 
     _velo_grid_create = functools.partial(_grid_create, params=rays.velodyne_params)
-    _scala_grid_create = functools.partial(_grid_create, params=rays.scala_params, shift=np.array([2.0, 0, -2]))
     _velo_pcl_create = functools.partial(_lidar_pcl_create, params=rays.velodyne_params)
-    _scala_pcl_create = functools.partial(_lidar_pcl_create, params=rays.scala_params, shift=np.array([2.0, 0, -2]))
 
     label = ot.dataset.DataAttrib('{data_id:0{width}d}.txt', label_loader, 'label_2', deletable=False)
     label_semkitti = ot.dataset.DataAttrib('{data_id:0{width}d}.label', label_semkitti_loader, 'labels', deletable=False)
@@ -196,8 +194,6 @@ class KittiEntry(ot.dataset.DatasetEntry):
         '{data_id:0{width}d}.npz', lambda fname: dict(np.load(fname)), 'label_objects', _label_objects_create, ot.io.np_savez
     )
     velodyne_grid = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'grid'), _velo_grid_create, np.save)
-    scala_grid = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-scala', 'grid'), _scala_grid_create, np.save)
     velodyne_pcl = ot.dataset.DataAttrib(
         '{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'pcl'), _velo_pcl_create, np.save, ['name']
     )
-    scala_pcl = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-scala', 'pcl'), _scala_pcl_create, np.save, ['name'])

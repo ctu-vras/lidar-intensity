@@ -116,9 +116,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
             world_pts = ot.visual.rot_mat(npa(entity['rot'])) @ npa(pts).T + npa(entity['pos'])[:, None]
             ego_pts = ot.visual.fromhomo(view @ ot.visual.tohomo(world_pts))
             if self.bbox is not None:
-                ind = (
-                    (np.abs(ego_pts[0, :]) < self.bbox[0]) & (np.abs(ego_pts[1, :]) < self.bbox[1]) & (np.abs(ego_pts[2, :]) < self.bbox[2])
-                )
+                ind = (np.abs(ego_pts[0, :]) < self.bbox[0]) & (np.abs(ego_pts[1, :]) < self.bbox[1]) & (np.abs(ego_pts[2, :]) < self.bbox[2])
                 if not np.all(ind):
                     continue
             im_pts = ot.visual.fromhomo(proj @ ot.visual.tohomo(ego_pts))
@@ -142,14 +140,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
             colors.append((255, 0, 0, 255) if entity['type'] == 'person' else (0, 255, 0, 255))
             bbox2d.append(npa(list(it.product(*np.stack((im_pts.min(1), im_pts.max(1)), -1)))).T)
             world.append(world_pts)
-        return {
-            'bbox3d': npa(bbox3d),
-            'bbox2d': npa(bbox2d),
-            'colors': npa(colors),
-            'world': npa(world),
-            'mats': npa(mats),
-            'clazz': npa(clazz),
-        }
+        return {'bbox3d': npa(bbox3d), 'bbox2d': npa(bbox2d), 'colors': npa(colors), 'world': npa(world), 'mats': npa(mats), 'clazz': npa(clazz)}
 
     def _draw_bbox(self, bbox_key, connection):
         bbox_data = self.bbox_data
@@ -167,9 +158,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
         tmp_stencil = stencil[change_mask]
         for (new_clazz, old_clazz), mat in zip(bbox_data['clazz'], bbox_data['mats']):
             npts = ot.visual.fromhomo(mat @ tmp_coords)
-            where = (
-                (npts[0] >= 0) & (npts[0] <= 1) & (npts[1] >= 0) & (npts[1] <= 1) & (npts[2] >= 0) & (npts[2] <= 1) & (tmp_stencil == old_clazz)
-            )
+            where = (npts[0] >= 0) & (npts[0] <= 1) & (npts[1] >= 0) & (npts[1] <= 1) & (npts[2] >= 0) & (npts[2] <= 1) & (tmp_stencil == old_clazz)
             tmp_stencil[where] = new_clazz
         stencil[change_mask] = tmp_stencil
         return stencil
@@ -187,11 +176,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
         )
 
         if self.bbox is not None:
-            ind = (
-                (np.abs(ego_points[0, :]) < self.bbox[0])
-                & (np.abs(ego_points[1, :]) < self.bbox[1])
-                & (np.abs(ego_points[2, :]) < self.bbox[2])
-            )
+            ind = (np.abs(ego_points[0, :]) < self.bbox[0]) & (np.abs(ego_points[1, :]) < self.bbox[1]) & (np.abs(ego_points[2, :]) < self.bbox[2])
         else:
             ind = np.ones((ego_points.shape[1],), dtype=np.bool)
         coords = viewi @ ot.visual.tohomo(ego_points[:, ind])
@@ -238,9 +223,6 @@ class GTAEntry(ot.dataset.DatasetEntry):
     _create_velo_grid = functools.partial(_create_lidar_grid, params=rays.velodyne_params, allowance=0.2)
     _create_velo_pcl = functools.partial(_create_lidar_pcl, params=rays.velodyne_params)
     _create_velo_pcl_world = functools.partial(_create_lidar_pcl, params=rays.velodyne_params, world=True)
-    _create_scala_grid = functools.partial(_create_lidar_grid, params=rays.scala_params, allowance=0.2)
-    _create_scala_pcl = functools.partial(_create_lidar_pcl, params=rays.scala_params)
-    _create_scala_pcl_world = functools.partial(_create_lidar_pcl, params=rays.scala_params, world=True)
     rgb = ot.dataset.DataAttrib('{data_id:0{width}d}.png', ot.io.img_load, ('orig', 'orig-rgb'), deletable=False)
     depth = ot.dataset.DataAttrib('{data_id:0{width}d}.png', _depth_loader, ('orig', 'orig-depth'), deletable=False)
     stencil = ot.dataset.DataAttrib('{data_id:0{width}d}.png', _stencil_loader, ('orig', 'orig-stencil'), deletable=False)
@@ -251,93 +233,47 @@ class GTAEntry(ot.dataset.DatasetEntry):
         '{data_id:0{width}d}.png', ot.io.img_load, ('processed', 'overlays_stencil'), _draw_overlay_stencil, ot.io.img_save
     )
     bbox_data = ot.dataset.DataAttrib(
-        '{data_id:0{width}d}.npz',
-        lambda fname: dict(np.load(fname)),
-        ('processed', 'bbox_data'),
-        _create_bbox_data,
-        ot.io.np_savez,
-        wfable=False,
+        '{data_id:0{width}d}.npz', lambda fname: dict(np.load(fname)), ('processed', 'bbox_data'), _create_bbox_data, ot.io.np_savez, wfable=False
     )
     bbox3d = ot.dataset.DataAttrib('{data_id:0{width}d}.png', ot.io.img_load, ('processed', 'bbox3d'), _draw_bbox3d, ot.io.img_save)
     bbox2d = ot.dataset.DataAttrib('{data_id:0{width}d}.png', ot.io.img_load, ('processed', 'bbox2d'), _draw_bbox2d, ot.io.img_save)
+    velodyne_grid = ot.dataset.DataAttrib(
+        '{data_id:0{width}d}.npy',
+        ot.io.np_load,
+        ('processed', 'velodyne', 'grid'),
+        _create_velo_grid,
+        np.save,
+        ['start_id', 'stride', 'together'],
+        0,
+        4,
+        4,
+    )
+    velodyne_pcl = ot.dataset.DataAttrib(
+        '{data_id:0{width}d}.npy',
+        ot.io.np_load,
+        ('processed', 'velodyne', 'ego_pcl'),
+        _create_velo_pcl,
+        np.save,
+        ['name', 'start_id', 'stride'],
+        0,
+        4,
+        4,
+    )
+    velodyne_world_pcl = ot.dataset.DataAttrib(
+        '{data_id:0{width}d}.npy',
+        ot.io.np_load,
+        ('processed', 'velodyne', 'world_pcl'),
+        _create_velo_pcl_world,
+        np.save,
+        ['name', 'start_id', 'stride'],
+        0,
+        4,
+        4,
+    )
 
 
 class GTADataset(ot.dataset.Dataset):
-    def __init__(self, base_dir, bbox=(130, 130, 130), velodyne=True, scala=True, dash=True, base=GTAEntry, **kwargs):
+    def __init__(self, base_dir, bbox=(130, 130, 130), base=GTAEntry, **kwargs):
         num_files = ot.dataset.NumFiles(num_files=len(glob.glob(osp.join(base_dir, 'orig', 'orig-json', '*.json'))))
         kwargs['bbox'] = bbox
-        populace_dict = dict(base.__dict__)
-        stride = int(velodyne) * 4 + int(scala) * 2 + int(dash)
-        scala_start = int(velodyne) * 4
-        if velodyne:
-            populace_dict['velodyne_grid'] = ot.dataset.DataAttrib(
-                '{data_id:0{width}d}.npy',
-                ot.io.np_load,
-                ('processed', 'velodyne', 'grid'),
-                base._create_velo_grid,  # pylint: disable=protected-access
-                np.save,
-                ['start_id', 'stride', 'together'],
-                0,
-                stride,
-                4,
-            )
-            populace_dict['velodyne_pcl'] = ot.dataset.DataAttrib(
-                '{data_id:0{width}d}.npy',
-                ot.io.np_load,
-                ('processed', 'velodyne', 'ego_pcl'),
-                base._create_velo_pcl,  # pylint: disable=protected-access
-                np.save,
-                ['name', 'start_id', 'stride'],
-                0,
-                stride,
-                4,
-            )
-            populace_dict['velodyne_world_pcl'] = ot.dataset.DataAttrib(
-                '{data_id:0{width}d}.npy',
-                ot.io.np_load,
-                ('processed', 'velodyne', 'world_pcl'),
-                base._create_velo_pcl_world,  # pylint: disable=protected-access
-                np.save,
-                ['name', 'start_id', 'stride'],
-                0,
-                stride,
-                4,
-            )
-        if scala:
-            populace_dict['scala_grid'] = ot.dataset.DataAttrib(
-                '{data_id:0{width}d}.npy',
-                ot.io.np_load,
-                ('processed', 'scala', 'grid'),
-                base._create_scala_grid,  # pylint: disable=protected-access
-                np.save,
-                ['start_id', 'stride', 'together'],
-                scala_start,
-                stride,
-                2,
-            )
-            populace_dict['scala_pcl'] = ot.dataset.DataAttrib(
-                '{data_id:0{width}d}.npy',
-                ot.io.np_load,
-                ('processed', 'scala', 'ego_pcl'),
-                base._create_scala_pcl,  # pylint: disable=protected-access
-                np.save,
-                ['name', 'start_id', 'stride'],
-                scala_start,
-                stride,
-                2,
-            )
-            populace_dict['scala_pcl_world'] = ot.dataset.DataAttrib(
-                '{data_id:0{width}d}.npy',
-                ot.io.np_load,
-                ('processed', 'scala', 'world_pcl'),
-                base._create_scala_pcl_world,  # pylint: disable=protected-access
-                np.save,
-                ['name', 'start_id', 'stride'],
-                scala_start,
-                stride,
-                2,
-            )
-        new_name = base.__name__ + '_computed'
-        comp_class = type(new_name, base.__bases__, populace_dict)
-        globals()[new_name] = comp_class  # ugly fuckery because of pickles
-        super().__init__(base_dir, num_files, comp_class, entry_kwargs=kwargs)
+        super().__init__(base_dir, num_files, base, entry_kwargs=kwargs)
