@@ -1,47 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
+using GTA.Math;
+using GTA.Native;
+using Point = System.Windows.Markup;
 
 namespace GTAVisionUtils
 {
     public class ImageUtils
     {
         private static Task imageTask;
-        private static byte[] lastCapturedBytes;
-
-        public static byte[] getLastCapturedFrame()
-        {
-            WaitForProcessing();
-            return lastCapturedBytes;
-        }
 
         public static void WaitForProcessing()
         {
-            if (imageTask == null) return;
-            imageTask.Wait();
-        }
-
-        public static void StartUploadTask(ZipArchive archive, string name, int w, int h,
-            List<byte[]> colors, byte[] depth, byte[] stencil)
-        {
-            WaitForProcessing();
-            imageTask = Task.Run(() => UploadToArchive(archive, name, w, h, colors, depth, stencil));
-        }
-
-        public static void UploadToArchive(ZipArchive archive, string name, int w, int h,
-            List<byte[]> colors, byte[] depth, byte[] stencil)
-        {
-            var memstream = new MemoryStream();
-            WriteToTiff(name, w, h, colors, depth, stencil);
-            var entry = archive.CreateEntry(name + ".tiff", CompressionLevel.NoCompression);
-            var entryStream = entry.Open();
-            lastCapturedBytes = memstream.ToArray();
-            entryStream.Write(lastCapturedBytes, 0, lastCapturedBytes.Length);
-            entryStream.Close();
-            memstream.Close();
+            imageTask?.Wait();
         }
 
         public static async void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth,
@@ -161,8 +134,7 @@ namespace GTAVisionUtils
                     t.SetField(TiffTag.BITSPERSAMPLE, 8);
                     t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
                     t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
-//                    t.SetField(TiffTag.COMPRESSION, Compression.LZW);    // JPEG conversion caused ungly artifacts, making screenshots unusable for computer vision related tasks
-                    t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
+                    t.SetField(TiffTag.COMPRESSION, Compression.LZW);
                     t.SetField(TiffTag.JPEGQUALITY, 95);
                     t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
                     t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
@@ -208,6 +180,23 @@ namespace GTAVisionUtils
                 t.Flush();
                 t.Close();
             }
+        }
+
+        public static Vector2 Convert3dTo2d(Vector3 pos)
+        {
+            var tmpResX = new OutputArgument();
+            var tmpResY = new OutputArgument();
+            if (Function.Call<bool>(Hash._WORLD3D_TO_SCREEN2D, (InputArgument) pos.X,
+                (InputArgument) pos.Y, (InputArgument) pos.Z,
+                (InputArgument) tmpResX, (InputArgument) tmpResY))
+            {
+                Vector2 v2;
+                v2.X = tmpResX.GetResult<float>();
+                v2.Y = tmpResY.GetResult<float>();
+                return v2;
+            }
+
+            return new Vector2(-1f, -1f);
         }
     }
 }

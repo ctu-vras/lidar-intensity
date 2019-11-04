@@ -9,6 +9,7 @@ using GTA.Math;
 using GTA.Native;
 using GTAVisionUtils;
 using IniParser;
+using VAutodrive;
 
 namespace GTAVisionExport
 {
@@ -22,35 +23,26 @@ namespace GTAVisionExport
         private static readonly TimeNearPointChecker NearPointFromStart =
             new TimeNearPointChecker(TimeSpan.FromSeconds(60), 10, new Vector3());
 
-        private static readonly TimeNotMovingTowardsPointChecker LongFarFromTarget =
-            new TimeNotMovingTowardsPointChecker(TimeSpan.FromMinutes(2.5), new Vector2());
 
-        private static bool _notificationsAllowed;
         public static string Location;
 
         //this variable, when true, should be disabling car spawning and autodrive starting here, because offroad has different settings
         private static readonly bool GatheringData = true;
         private static readonly float Scale = 0.5f;
-        private readonly bool clearEverything = false;
-
-        private readonly bool currentWeather = true;
 
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
         private readonly int everyNth;
 
-        private readonly bool
-            staticCamera = false; // this turns off whole car spawning, teleportation and autodriving procedure
+//        this is the vaustodrive keyhandling
+        private readonly KeyHandling kh = new KeyHandling();
 
         private readonly bool useMultipleCameras = true; // when false, cameras handling script is not used at all
 
-        private readonly Weather wantedWeather = Weather.Clear;
         private int curSessionId = -1;
         private bool enabled;
-
-//        this is the vaustodrive keyhandling
-        private KeyHandling kh = new KeyHandling();
+        private bool isGamePaused;
 
         private Task postgresTask;
 
@@ -66,7 +58,6 @@ namespace GTAVisionExport
             Location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(Location, "GTAVision.ini"));
 
-            //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             LogFilePath = data["Snapshots"]["LogFile"];
             everyNth = int.Parse(data["Snapshots"]["EveryNth"]);
@@ -89,10 +80,10 @@ namespace GTAVisionExport
             }
 
             Logger.WriteLine("Logger prepared");
-            UINotify("Logger initialized. Going to initialize cameras.");
+            UI.Notify("Logger initialized. Going to initialize cameras.");
             CamerasList.initialize();
             InitializeCameras();
-            UINotify("VisionExport plugin initialized.");
+            UI.Notify("VisionExport plugin initialized.");
         }
 
         private void InitializeCameras()
@@ -125,40 +116,30 @@ namespace GTAVisionExport
                     StopRun();
                     runTask?.Wait();
                     runTask = StartRun();
-                    //StopSession();
-                    //Autostart();
-                    UINotify("need reload game");
+                    UI.Notify("need reload game");
                     Wait(100);
                     ReloadGame();
                     break;
                 case GameStatus.NeedStart:
                     Logger.WriteLine("Status is NeedStart");
-                    //Autostart();
-                    // use reloading temporarily
                     StopRun();
-
                     ReloadGame();
                     Wait(100);
                     runTask?.Wait();
                     runTask = StartRun();
-                    //Autostart();
                     break;
                 case GameStatus.NoActionNeeded:
                     break;
             }
 
-//            UINotify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
-//            UINotify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
-
-//            UINotify("going to save images and save to postgres");
 
             if (GatheringData && ticked == 0)
                 try
                 {
                     GamePause(true);
-                    GatherData(0);
+                    GatherData(5);
                     GamePause(false);
                 }
                 catch (Exception exception)
@@ -167,12 +148,12 @@ namespace GTAVisionExport
                     Logger.WriteLine("exception occured, logging and continuing");
                     Logger.WriteLine(exception);
                 }
+
+            Game.TimeScale = 1f;
         }
 
         private void GatherData(int delay = 50)
         {
-            if (clearEverything) ClearSurroundingEverything(Game.Player.Character.Position, 1000f);
-
             Game.TimeScale = 0.005f;
 
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
@@ -185,8 +166,8 @@ namespace GTAVisionExport
                 {
                     Logger.WriteLine("activating camera " + i);
                     CamerasList.ActivateCamera(i);
-                    GatherDatForOneCamera(dateTimeFormat, guid);
                     Wait(delay);
+                    GatherDatForOneCamera(dateTimeFormat, guid);
                 }
 
                 CamerasList.Deactivate();
@@ -208,7 +189,7 @@ namespace GTAVisionExport
             GTAData dat;
             bool success;
 
-            var weather = currentWeather ? World.Weather : wantedWeather;
+            var weather = World.Weather;
             dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
 
             if (CamerasList.activeCameraRotation.HasValue)
@@ -227,16 +208,14 @@ namespace GTAVisionExport
             if (dat == null) return;
 
 
-            success = SaveSnapshotToFile(dat.ImageName, weather, false);
+            success = SaveSnapshotToFile(dat.ImageName);
 
             if (!success)
-                //                    when getting data and saving to file failed, saving to db is skipped
                 return;
 
-            PostgresExport.SaveSnapshot(dat, run.guid);
+            PostgresExport.SaveSnapshot(dat, run.Id);
         }
 
-        /* -1 = need restart, 0 = normal, 1 = need to enter vehicle */
         public GameStatus CheckStatus()
         {
             var player = Game.Player.Character;
@@ -244,14 +223,13 @@ namespace GTAVisionExport
             if (player.IsInVehicle())
             {
                 var vehicle = player.CurrentVehicle;
-//                here checking the time in low or no speed 
                 if (vehicle.Speed < 1.0f)
                 {
                     //speed is in mph
                     if (LowSpeedTime.isPassed(Game.GameTime))
                     {
                         Logger.WriteLine("needed reload by low speed for 2 minutes");
-                        UINotify("needed reload by low speed for 2 minutes");
+                        UI.Notify("needed reload by low speed for 2 minutes");
                         return GameStatus.NeedReload;
                     }
                 }
@@ -265,14 +243,14 @@ namespace GTAVisionExport
                     if (NotMovingTime.isPassed(Game.GameTime))
                     {
                         Logger.WriteLine("needed reload by staying in place 30 seconds");
-                        UINotify("needed reload by staying in place 30 seconds");
+                        UI.Notify("needed reload by staying in place 30 seconds");
                         return GameStatus.NeedReload;
                     }
-                    
+
                     if (NotMovingNorDrivingTime.isPassed(Game.GameTime))
                     {
                         Logger.WriteLine("starting driving from 6s inactivity");
-                        UINotify("starting driving from 6s inactivity");
+                        UI.Notify("starting driving from 6s inactivity");
                     }
                 }
                 else
@@ -294,9 +272,9 @@ namespace GTAVisionExport
             return GameStatus.NeedReload;
         }
 
-        public async Task StartSession(string name = session_name)
+        public async Task StartSession()
         {
-            if (name == null) name = Guid.NewGuid().ToString();
+            var name = Guid.NewGuid().ToString();
             if (curSessionId != -1) StopSession();
             var id = await PostgresExport.StartSession(name);
             curSessionId = id;
@@ -324,44 +302,34 @@ namespace GTAVisionExport
             ImageUtils.WaitForProcessing();
             enabled = false;
             PostgresExport.StopRun(run);
-//            UploadFile();
             run = null;
 
             Game.Player.LastVehicle.Alpha = int.MaxValue;
         }
 
-        public static void UINotify(string message)
-        {
-            //just wrapper for UI.Notify, but lets us disable showing notifications ar all
-            if (_notificationsAllowed) UI.Notify(message);
-        }
-
         public void GamePause(bool value)
         {
             //wraper for pausing and unpausing game, because if its paused, I don't want to pause it again and unpause it. 
-            if (!isGamePaused) Game.Pause(value);
+            if (value != isGamePaused) Game.Pause(value);
+            isGamePaused = value;
         }
 
         public static void EnterVehicle()
         {
-            /*
-            var vehicle = World.GetClosestVehicle(player.Character.Position, 30f);
-            player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
-            */
             Model mod = null;
             mod = new Model(GTAConst.OnroadVehicleHash);
 
             var player = Game.Player;
-            if (mod == null) UINotify("mod is null");
+            if (mod == null) UI.Notify("mod is null");
 
-            if (player == null) UINotify("player is null");
+            if (player == null) UI.Notify("player is null");
 
-            if (player.Character == null) UINotify("player.Character is null");
+            if (player.Character == null) UI.Notify("player.Character is null");
 
-            UINotify("player position: " + player.Character.Position);
+            UI.Notify("player position: " + player.Character.Position);
             var vehicle = World.CreateVehicle(mod, player.Character.Position);
             if (vehicle == null)
-                UINotify("vehicle is null. Something is fucked up");
+                UI.Notify("vehicle is null. Something is fucked up");
             else
                 player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
 
@@ -372,7 +340,7 @@ namespace GTAVisionExport
 
         public void ToggleNavigation()
         {
-            MethodInfo inf =
+            var inf =
                 kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
@@ -387,15 +355,6 @@ namespace GTAVisionExport
             Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, x, y, z, radius, false, false, false, false);
         }
 
-        private void ClearSurroundingEverything(Vector3 pos, float radius)
-        {
-            ClearSurroundingEverything(pos.X, pos.Y, pos.Z, radius);
-        }
-
-        private void ClearSurroundingEverything(float x, float y, float z, float radius)
-        {
-            Function.Call(Hash.CLEAR_AREA, x, y, z, radius, false, false, false, false);
-        }
 
         public static void ClearStuckCheckers()
         {
@@ -403,15 +362,11 @@ namespace GTAVisionExport
             NotMovingTime.clear();
             NotMovingNorDrivingTime.clear();
             NearPointFromStart.clear();
-            LongFarFromTarget.clear();
-            triedRestartingAutodrive = false;
             Logger.WriteLine("clearing checkers");
         }
 
         public void ReloadGame()
         {
-            if (staticCamera) return;
-
             ClearStuckCheckers();
 
             var player = Game.Player.Character;
@@ -436,59 +391,36 @@ namespace GTAVisionExport
                     postgresTask = StartSession();
                     runTask?.Wait();
                     runTask = StartRun();
-                    UINotify("GTA Vision Enabled");
-//                there is set weather, just for testing
-                    World.Weather = wantedWeather;
                     break;
                 case Keys.PageDown:
-                    if (staticCamera) CamerasList.Deactivate();
-
                     StopRun();
                     StopSession();
-                    UINotify("GTA Vision Disabled");
                     break;
-                // temp modification
-                case Keys.H:
-                    EnterVehicle();
-                    UINotify("Trying to enter vehicle");
-                    ToggleNavigation();
+                case Keys.F9:
+                    World.Weather = World.Weather.Next();
                     break;
-                // temp modification
-                case Keys.Y:
-                    ReloadGame();
+                case Keys.F10:
+                    World.Weather = World.Weather.Prev();
                     break;
-                // temp modification
-                case Keys.X:
-                    _notificationsAllowed = !_notificationsAllowed;
-                    if (_notificationsAllowed)
-                        UI.Notify("Notifications Enabled");
-                    else
-                        UI.Notify("Notifications Disabled");
-
+                case Keys.F11:
+                    World.CurrentDayTime += new TimeSpan(1, 0, 0);
+                    break;
+                case Keys.F12:
+                    World.CurrentDayTime -= new TimeSpan(1, 0, 0);
                     break;
             }
         }
 
-        private bool SaveSnapshotToFile(string name, Weather weather, bool manageGamePauses = true)
+        private bool SaveSnapshotToFile(string name)
         {
-//            returns true on success, and false on failure
-            if (manageGamePauses) GamePause(true);
-
-            World.TransitionToWeather(weather,
-                0.0f);
-            Wait(10);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
             var color = VisionNative.GetColorBuffer();
             if (depth == null || stencil == null || color == null) return false;
 
-
-            if (manageGamePauses) GamePause(false);
-
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]> {color}, depth, stencil, false);
-//            UINotify("file saved to: " + fileName);
             return true;
         }
     }

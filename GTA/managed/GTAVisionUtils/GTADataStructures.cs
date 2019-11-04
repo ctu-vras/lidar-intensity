@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using GTA;
-using GTA.Native;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using SharpDX;
-using Vector2 = GTA.Math.Vector2;
 using Vector3 = GTA.Math.Vector3;
 
 namespace GTAVisionUtils
@@ -14,7 +12,7 @@ namespace GTAVisionUtils
     public class GTARun
     {
         public Guid guid { get; set; }
-        public string archiveKey { get; set; }
+        public int Id { get; set; }
     }
 
     public class GTABoundingBox2
@@ -23,30 +21,6 @@ namespace GTAVisionUtils
         public GTAVector2 Max { get; set; }
 
         public float Area => (Max.X - Min.X) * (Max.Y - Min.Y);
-    }
-
-    public class GTAVehicle
-    {
-        public GTAVehicle(Vehicle v)
-        {
-            Pos = new GTAVector(v.Position);
-            BBox = GTAData.ComputeBoundingBox(v, v.Position);
-        }
-
-        public GTAVector Pos { get; set; }
-        public GTABoundingBox2 BBox { get; set; }
-    }
-
-    public class GTAPed
-    {
-        public GTAPed(Ped p)
-        {
-            Pos = new GTAVector(p.Position);
-            BBox = GTAData.ComputeBoundingBox(p, p.Position);
-        }
-
-        public GTAVector Pos { get; set; }
-        public GTABoundingBox2 BBox { get; set; }
     }
 
     public enum DetectionType
@@ -91,7 +65,7 @@ namespace GTAVisionUtils
             Type = type;
             Pos = new GTAVector(e.Position);
             Distance = Game.Player.Character.Position.DistanceTo(e.Position);
-            BBox = GTAData.ComputeBoundingBox(e, e.Position);
+            BBox = GTAData.ComputeBoundingBox(e);
             Handle = e.Handle;
 
             Rot = new GTAVector(e.Rotation);
@@ -150,25 +124,8 @@ namespace GTAVisionUtils
             Y = y;
         }
 
-        public GTAVector2()
-        {
-            X = 0f;
-            Y = 0f;
-        }
-
-        public GTAVector2(Vector2 v)
-        {
-            X = v.X;
-            Y = v.Y;
-        }
-
         public float X { get; set; }
         public float Y { get; set; }
-
-        public static GTAVector2 fromVector2(Vector2 vector2)
-        {
-            return new GTAVector2(vector2.X, vector2.Y);
-        }
     }
 
     public class GTAData
@@ -208,12 +165,7 @@ namespace GTAVisionUtils
 
         public List<GTADetection> Detections { get; set; }
 
-        public static SharpDX.Vector3 CvtVec(Vector3 inp)
-        {
-            return (SharpDX.Vector3) new GTAVector(inp);
-        }
-
-        public static GTABoundingBox2 ComputeBoundingBox(Entity e, Vector3 offset, float scale = 0.5f)
+        public static GTABoundingBox2 ComputeBoundingBox(Entity e)
         {
             var m = e.Model;
             var rv = new GTABoundingBox2
@@ -225,33 +177,14 @@ namespace GTAVisionUtils
             Vector3 gmax;
             m.GetDimensions(out gmin, out gmax);
             var bbox = new BoundingBox((SharpDX.Vector3) new GTAVector(gmin), (SharpDX.Vector3) new GTAVector(gmax));
-            //Console.WriteLine(bbox.GetCorners()[0]);
-            /*
-            for (int i = 0; i < bbox.GetCorners().Length; ++i) {
-                for (int j = 0; j < bbox.GetCorners().Length; ++j) {
-                    if (j == i) continue;
-                    var c1 = bbox.GetCorners()[i];
-                    var c2 = bbox.GetCorners()[j];
-                    HashFunctions.Draw3DLine(e.GetOffsetInWorldCoords(new Vector3(c1.X, c1.Y, c1.Z)), e.GetOffsetInWorldCoords(new Vector3(c2.X, c2.Y, c2.Z)), 0,0);
-                }
-            }
-            */
-            /*
-            for (int i = 0; i < bbox.GetCorners().Length; ++i)
-            {
-                var corner = bbox.GetCorners()[i];
-                var cornerinworld = e.GetOffsetInWorldCoords(new Vector3(corner.X, corner.Y, corner.Z));
 
-
-            }*/
-            //UI.Notify(e.HeightAboveGround.ToString());
-            var sp = HashFunctions.Convert3dTo2d(e.GetOffsetInWorldCoords(e.Position));
+            var sp = ImageUtils.Convert3dTo2d(e.GetOffsetInWorldCoords(e.Position));
             foreach (var corner in bbox.GetCorners())
             {
                 var c = new Vector3(corner.X, corner.Y, corner.Z);
 
                 c = e.GetOffsetInWorldCoords(c);
-                var s = HashFunctions.Convert3dTo2d(c);
+                var s = ImageUtils.Convert3dTo2d(c);
                 if (s.X == -1f || s.Y == -1f)
                 {
                     rv.Min.X = float.PositiveInfinity;
@@ -261,68 +194,16 @@ namespace GTAVisionUtils
                     return rv;
                 }
 
-                /*
-                if(s.X == -1) {
-                    if (sp.X < 0.5) s.X = 0f;
-                    if (sp.X >= 0.5) s.X = 1f;
-                }
-                if(s.Y == -1) {
-                    if (sp.Y < 0.5) s.Y = 0f;
-                    if (sp.Y >= 0.5) s.Y = 1f;
-                }
-                */
+
                 rv.Min.X = Math.Min(rv.Min.X, s.X);
                 rv.Min.Y = Math.Min(rv.Min.Y, s.Y);
                 rv.Max.X = Math.Max(rv.Max.X, s.X);
                 rv.Max.Y = Math.Max(rv.Max.Y, s.Y);
             }
 
-            var w = rv.Max.X - rv.Min.X;
-            var h = rv.Max.Y - rv.Min.Y;
-//            just for debug purposes, show visible and not visible entities in other color
-//            if (CheckVisible(e))
-//            {
-//                HashFunctions.DrawRect(rv.Min.X + w / 2, rv.Min.Y + h / 2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y,
-//                    Color.White, 100);
-//            }
-//            else
-//            {
-//                HashFunctions.DrawRect(rv.Min.X + w / 2, rv.Min.Y + h / 2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y,
-//                    Color.Red, 100);                
-//            }
-//            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);
             return rv;
         }
 
-        public static bool CheckVisible(Entity e)
-        {
-//            return true;
-
-            var ppos = World.RenderingCamera.Position;
-            var isLOS = Function.Call<bool>((Hash) 0x0267D00AF114F17A, Game.Player.Character, e);
-            if (isLOS) return true;
-//            return isLOS;
-//            var ppos = GameplayCamera.Position;
-
-            var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything,
-                Game.Player.Character.CurrentVehicle);
-//            HashFunctions.Draw3DLine(ppos, e.Position);
-//            UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
-//            World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, ppos, (e.Position - ppos).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Green);
-
-//            debugging visualization for visible or invisible vehicles
-//            var p = Game.Player.LastVehicle;
-//            HashFunctions.Draw3DLine(p.Position, e.Position, System.Drawing.Color.Green);
-//            var s = HashFunctions.Convert3dTo2d(e.Position);
-//            HashFunctions.Draw2DText("Just Monika", s.X, s.Y, 255, 255, 255, 255);
-
-//            World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, p.Position, (e.Position - p.Position).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Green);
-//            return res.HitEntity == e;
-            if (res.HitEntity == e) return true;
-            if (res.HitCoords == null) return false;
-            return e.IsInRangeOf(res.HitCoords, 10);
-            //return res.HitEntity == e;
-        }
 
         public static GTAData DumpData(string imageName, Weather capturedWeather)
         {

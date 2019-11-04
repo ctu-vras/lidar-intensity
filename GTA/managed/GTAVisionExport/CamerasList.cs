@@ -55,9 +55,7 @@ namespace GTAVisionExport
             if (!nearClip.HasValue) nearClip = World.RenderingCamera.NearClip;
 
             mainCamera = World.CreateCamera(position, rotation, fov.Value);
-//            mainCamera = World.CreateCamera(new Vector3(), new Vector3(), fov.Value);
             mainCamera.NearClip = nearClip.Value;
-//            mainCamera.IsActive = true;
             mainCameraPosition = position;
             mainCameraRotation = rotation;
 

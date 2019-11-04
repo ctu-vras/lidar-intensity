@@ -24,70 +24,12 @@ namespace GTAVisionUtils
             var parser = new FileIniDataParser();
             var location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
-
-            //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
+            
             var str = data["Database"]["ConnectionString"];
 
             var conn = new NpgsqlConnection(str);
             conn.Open();
             return conn;
-        }
-
-        public static Guid InsertSystemData(NpgsqlConnection conn)
-        {
-            var systemInfo = new WMIInformation();
-            using (var cmd = new NpgsqlCommand())
-            {
-                cmd.Connection = conn;
-                cmd.Parameters.AddWithValue("@system_uuid", systemInfo.system_uuid);
-                cmd.Parameters.AddWithValue("@vendor", systemInfo.vendor);
-                cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
-                cmd.Parameters.AddWithValue("@username", systemInfo.username);
-                cmd.Parameters.AddWithValue("@systemtype", systemInfo.systemtype);
-                cmd.Parameters.AddWithValue("@totalmem", NpgsqlDbType.Bigint, systemInfo.totalmem);
-                cmd.CommandText =
-                    "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
-                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT(system_uuid) " +
-                    "DO UPDATE SET system_uuid = EXCLUDED.system_uuid RETURNING system_uuid";
-                return Guid.Parse(cmd.ExecuteScalar().ToString());
-            }
-        }
-
-        public static int InsertInstanceData(NpgsqlConnection conn)
-        {
-            var instanceinfo = new InstanceData();
-            using (var cmd = new NpgsqlCommand())
-            {
-                cmd.Connection = conn;
-
-                cmd.Parameters.AddWithValue("@host", Environment.MachineName);
-                cmd.Parameters.AddWithValue("@iid", DBNull.Value);
-                cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
-                cmd.Parameters.AddWithValue("@pubhost", DBNull.Value);
-                cmd.Parameters.AddWithValue("@amiid", DBNull.Value);
-
-                if (instanceinfo.type != "LOCALHOST")
-                {
-                    cmd.Parameters.AddWithValue("@host", instanceinfo.hostname);
-                    cmd.Parameters.AddWithValue("@iid", instanceinfo.instanceid);
-                    cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
-                    cmd.Parameters.AddWithValue("@pubhost", instanceinfo.publichostname);
-                    cmd.Parameters.AddWithValue("@amiid", instanceinfo.amiid);
-                }
-
-                cmd.CommandText =
-                    "SELECT instance_id FROM instances WHERE hostname=@host AND instancetype=@typ AND instanceid=@iid AND amiid=@amiid AND publichostname=@pubhost";
-                var id = cmd.ExecuteScalar();
-                if (id == null)
-                {
-                    cmd.CommandText =
-                        "INSERT INTO instances (hostname, instanceid, instancetype, publichostname, amiid) VALUES (@host, @iid, @typ, @pubhost, @amiid) " +
-                        "RETURNING instance_id";
-                    return (int) cmd.ExecuteScalar();
-                }
-
-                return (int) id;
-            }
         }
 
         public static async Task<int> StartSession(string name)
@@ -99,7 +41,6 @@ namespace GTAVisionUtils
         {
             var conn = OpenConnection();
             var result = 0;
-            //int instance = InsertInstanceData(conn);
             using (var cmd = new NpgsqlCommand())
             {
                 cmd.Connection = conn;
@@ -145,20 +86,18 @@ namespace GTAVisionUtils
         {
             var run = new GTARun();
             run.guid = Guid.NewGuid();
-            run.archiveKey = Path.Combine("images", run.guid + ".zip");
             var conn = OpenConnection();
-            var instanceid = InsertInstanceData(conn);
-            InsertSystemData(conn);
             using (var cmd = new NpgsqlCommand())
             {
                 cmd.Connection = conn;
                 cmd.CommandText =
-                    "INSERT INTO runs (runguid, archivepath, session_id, instance_id) VALUES (@guid, @archivekey, @session, @instance);";
+                    "INSERT INTO runs (runguid, session_id) VALUES (@guid, @session);";
                 cmd.Parameters.AddWithValue("@guid", run.guid);
-                cmd.Parameters.AddWithValue("@archivekey", run.archiveKey);
                 cmd.Parameters.AddWithValue("@session", sessionid);
-                cmd.Parameters.AddWithValue("@instance", instanceid);
                 cmd.ExecuteNonQuery();
+                cmd.CommandText =  "SELECT run_id FROM runs WHERE runguid = @guid";
+                run.Id = (int) cmd.ExecuteScalar();
+
             }
 
             conn.Close();
@@ -170,12 +109,12 @@ namespace GTAVisionUtils
         {
         }
 
-        public static async void SaveSnapshot(GTAData data, Guid runId)
+        public static async void SaveSnapshot(GTAData data, int runId)
         {
             await Task.Run(() => SaveSnapshotImpl(data, runId));
         }
 
-        public static void SaveSnapshotImpl(GTAData data, Guid runId)
+        public static void SaveSnapshotImpl(GTAData data, int runId)
         {
             var conn = OpenConnection();
             var trans = conn.BeginTransaction();
@@ -227,23 +166,24 @@ namespace GTAVisionUtils
                     "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, " +
                     "camera_rot, camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, " +
                     "player_pos, cam_near_clip, cam_far_clip, velocity, scene_id, camera_relative_rotation, " +
-                    "camera_relative_position, car_model_box, world_matrix, current_target) VALUES ( (SELECT run_id FROM runs WHERE " +
-                    "runguid=@guid), @Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), " +
+                    "camera_relative_position, car_model_box, world_matrix, current_target) VALUES ( @runid, @Version, " +
+                    "@Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), " +
                     "ST_MakePoint(@rotx, @roty, @rotz), ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, " +
                     "@width, @height, @ui_width, @ui_height, ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, " +
                     $"@cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id, {camRelativeRotString}, " +
                     $"{camRelativePosString}, {carModelBoxString}, @world_matrix, {currentTarget}) RETURNING snapshot_id;";
-                cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
-                cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
-                cmd.Parameters.Add(new NpgsqlParameter("@timestamp", data.Timestamp));
-                cmd.Parameters.Add(new NpgsqlParameter("@timeofday", data.LocalTime));
-                cmd.Parameters.Add(new NpgsqlParameter("@currentweather", data.CurrentWeather));
-                cmd.Parameters.Add(new NpgsqlParameter("@x", data.CamPos.X));
-                cmd.Parameters.Add(new NpgsqlParameter("@y", data.CamPos.Y));
-                cmd.Parameters.Add(new NpgsqlParameter("@z", data.CamPos.Z));
-                cmd.Parameters.Add(new NpgsqlParameter("@rotx", data.CamRot.X));
-                cmd.Parameters.Add(new NpgsqlParameter("@roty", data.CamRot.Y));
-                cmd.Parameters.Add(new NpgsqlParameter("@rotz", data.CamRot.Z));
+                cmd.Parameters.AddWithValue("@runid", runId);
+                cmd.Parameters.AddWithValue("@version", data.Version);
+                cmd.Parameters.AddWithValue("@imagepath", data.ImageName);
+                cmd.Parameters.AddWithValue("@timestamp", data.Timestamp);
+                cmd.Parameters.AddWithValue("@timeofday", data.LocalTime);
+                cmd.Parameters.AddWithValue("@currentweather", data.CurrentWeather);
+                cmd.Parameters.AddWithValue("@x", data.CamPos.X);
+                cmd.Parameters.AddWithValue("@y", data.CamPos.Y);
+                cmd.Parameters.AddWithValue("@z", data.CamPos.Z);
+                cmd.Parameters.AddWithValue("@rotx", data.CamRot.X);
+                cmd.Parameters.AddWithValue("@roty", data.CamRot.Y);
+                cmd.Parameters.AddWithValue("@rotz", data.CamRot.Z);
                 cmd.Parameters.AddWithValue("@dirx", data.CamDirection.X);
                 cmd.Parameters.AddWithValue("@diry", data.CamDirection.Y);
                 cmd.Parameters.AddWithValue("@dirz", data.CamDirection.Z);
@@ -253,7 +193,6 @@ namespace GTAVisionUtils
                 cmd.Parameters.AddWithValue("@world_matrix", data.WorldMatrix.ToArray());
                 cmd.Parameters.AddWithValue("@width", data.ImageWidth);
                 cmd.Parameters.AddWithValue("@height", data.ImageHeight);
-//                @ui_width, @ui_height, @player_pos, @cam_near_clip, @cam_far_clip
                 cmd.Parameters.AddWithValue("@ui_width", data.UIWidth);
                 cmd.Parameters.AddWithValue("@ui_height", data.UIHeight);
                 cmd.Parameters.AddWithValue("@player_x", data.playerPos.X);
@@ -265,23 +204,7 @@ namespace GTAVisionUtils
                 cmd.Parameters.AddWithValue("@cam_near_clip", data.CamNearClip);
                 cmd.Parameters.AddWithValue("@cam_far_clip", data.CamFarClip);
                 cmd.Parameters.AddWithValue("@scene_id", data.sceneGuid);
-
-                cmd.Parameters.Add(new NpgsqlParameter("@guid", runId));
                 var snapshotid = (int) cmd.ExecuteScalar();
-                cmd.Parameters.Clear();
-                cmd.CommandText =
-                    "INSERT INTO snapshot_weathers (snapshot_id, weather_type, snapshot_page) VALUES (@snapshot, @weather, @page);";
-                cmd.Parameters.AddWithValue("@snapshot", NpgsqlDbType.Integer, snapshotid);
-                cmd.Parameters.AddWithValue("@weather", NpgsqlDbType.Enum, Weather.Unknown);
-                cmd.Parameters.Add("@page", NpgsqlDbType.Integer);
-                cmd.Prepare();
-                for (var i = 0; i < data.CapturedWeathers.Count; ++i)
-                {
-                    cmd.Parameters["@weather"].Value = data.CapturedWeathers[i];
-                    cmd.Parameters["@page"].Value = i;
-                    cmd.ExecuteNonQuery();
-                }
-
                 cmd.Parameters.Clear();
                 cmd.Parameters.Add("@snapshot", NpgsqlDbType.Integer);
                 cmd.Parameters.AddWithValue("@type", NpgsqlDbType.Enum, DetectionType.background);

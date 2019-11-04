@@ -5,14 +5,15 @@ Note: there may be some unessesary steps that could be removed from this procedu
 My set-up:
 ----------
 GTX770, Windows 10 64bit, Visual Studio 2017 (community edition), cmake 3.9.0, GTAV version 1.0.231.0
+It is possible to build it with higher version, but some care must be taken (mostly due to std::filesystem which happened to be in stdlib since c++17)
 
 Needed tools and libraries
 --------------------------
-AsiLoader and ScriptHookV	: http://www.dev-c.com/files/ScriptHookV_1.0.1180.2.zip
+AsiLoader and ScriptHookV	: http://www.dev-c.com/gtav/scripthookv/
 
 cmake				: https://cmake.org/download/
 
-Eigen3				: http://bitbucket.org/eigen/eigen/get/3.3.1.tar.bz2
+Eigen3				: https://bitbucket.org/eigen/eigen/downloads/?tab=tags
 
 MS Visual Studio 2017 		: https://www.visualstudio.com/cs/downloads/
 

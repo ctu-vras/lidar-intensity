@@ -177,9 +177,30 @@ namespace GTAVisionExport
 
     public class GTAConst
     {
-        public static Vector3 OriginalStartPos = new Vector3(311.7819f, -1372.574f, 31.84874f);
         public static Vector3 HighwayStartPos = new Vector3(1209.5412f, -1936.0394f, 38.3709f);
-
         public static VehicleHash OnroadVehicleHash = VehicleHash.Asea;
+    }
+
+    public static class Extensions
+    {
+        public static T Next<T>(this T src) where T : struct
+        {
+            if (!typeof(T).IsEnum)
+                throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
+
+            var arr = (T[]) Enum.GetValues(src.GetType());
+            var j = Array.IndexOf(arr, src) + 1;
+            return j == arr.Length - 1 ? arr[1] : arr[j];
+        }
+
+        public static T Prev<T>(this T src) where T : struct
+        {
+            if (!typeof(T).IsEnum)
+                throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
+
+            var arr = (T[]) Enum.GetValues(src.GetType());
+            var j = Array.IndexOf(arr, src) - 1;
+            return j == 0 ? arr[arr.Length - 2] : arr[j];
+        }
     }
 }

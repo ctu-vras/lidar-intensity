@@ -22,10 +22,10 @@ GTA plugins are available in directory GTA. Please follow the instructions from 
 Some notable changes from the original repository:
 
 - 4 cameras which switch themselves sitting atop a car to simulate lidar, each with 65 VFOV (~91 HFOV)
+- It is made substantially more lightweight in order to keep only necessary parts.
 
 ### TODO
 
 - [ ] GTA configs
 - [ ] Python Readme
-- [ ] GTA README
 - [ ] Full README

@@ -172,9 +172,9 @@ def convert_stencil(in_directory, out_directory, out_name, name, out_format):
         return
 
 
-def try_dump_snapshot_to_dataset(in_directory, out_directory, res, run_id, first):
+def try_dump_snapshot_to_dataset(in_directory, out_directory, res, run_id):
     try:
-        dump_snapshot_to_dataset(in_directory, out_directory, res, run_id, first)
+        dump_snapshot_to_dataset(in_directory, out_directory, res, run_id)
     except Exception as e:
         print(e)
         import traceback
