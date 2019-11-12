@@ -10,17 +10,7 @@ import otils as ot
 
 npa = np.array  # pylint: disable=invalid-name
 
-TYPES = [
-    ('Car', 1),
-    ('Van', 1),
-    ('Truck', 1),
-    ('Pedestrian', 2),
-    ('Person_sitting', 2),
-    ('Cyclist', 2),
-    ('Tram', 3),
-    ('Misc', 3),
-    ('DontCare', 3),
-]
+TYPES = [('Car', 1), ('Van', 1), ('Truck', 1), ('Pedestrian', 2), ('Person_sitting', 2), ('Cyclist', 2), ('Tram', 3), ('Misc', 3), ('DontCare', 3)]
 LAB_MAP = {t.lower(): i for t, i in TYPES}
 
 
@@ -194,6 +184,4 @@ class KittiEntry(ot.dataset.DatasetEntry):
         '{data_id:0{width}d}.npz', lambda fname: dict(np.load(fname)), 'label_objects', _label_objects_create, ot.io.np_savez
     )
     velodyne_grid = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'grid'), _velo_grid_create, np.save)
-    velodyne_pcl = ot.dataset.DataAttrib(
-        '{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'pcl'), _velo_pcl_create, np.save, ['name']
-    )
+    velodyne_pcl = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'pcl'), _velo_pcl_create, np.save, ['name'])

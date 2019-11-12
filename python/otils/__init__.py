@@ -1,7 +1,7 @@
-from . import checkpoint, dataset, io, visual, utils  # noqa : F401
-
-import warnings as _w
 import os.path as _osp
+import warnings as _w
+
+from . import checkpoint, dataset, io, utils, visual  # noqa : F401
 
 _fw_orig = _w.formatwarning
 _w.formatwarning = lambda msg, categ, fname, lineno, line=None: _fw_orig(msg, categ, _osp.split(fname)[1], lineno, '')

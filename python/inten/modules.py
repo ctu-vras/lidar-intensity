@@ -133,9 +133,7 @@ class SqueezePart(nn.Module):
                 Fire(2 * (ef + self.EF_ADD), sq + self.SQ_ADD, ef + self.EF_ADD, cam, top_parent=top_parent),
             )
         else:
-            self.beg = nn.Sequential(
-                Fire(input_channels, sq, ef, cam, top_parent=top_parent), Fire(2 * ef, sq, ef, cam, top_parent=top_parent)
-            )
+            self.beg = nn.Sequential(Fire(input_channels, sq, ef, cam, top_parent=top_parent), Fire(2 * ef, sq, ef, cam, top_parent=top_parent))
             self.rest = nn.Sequential(
                 Pool(3, 2, 1, top_parent=top_parent),
                 SqueezePart(2 * ef, sq + self.SQ_ADD, ef + self.EF_ADD, depth - 1, cam_depth - 1, top_parent=top_parent),
@@ -289,9 +287,7 @@ class _LocalPassing(nn.Module):
         self.condense_conv = nn.Conv2d(in_channels, (size_a * size_b - 1) * in_channels, (size_a, size_b), padding=pad, bias=False)
 
         self.ang_conv.weight = nn.Parameter(torch.from_numpy(_gauss_weights(size_a, size_b, in_channels, sq_var_ang)), requires_grad=False)
-        self.bi_ang_conv.weight = nn.Parameter(
-            torch.from_numpy(_gauss_weights(size_a, size_b, in_channels, sq_var_bi)), requires_grad=False
-        )
+        self.bi_ang_conv.weight = nn.Parameter(torch.from_numpy(_gauss_weights(size_a, size_b, in_channels, sq_var_bi)), requires_grad=False)
         self.condense_conv.weight = nn.Parameter(torch.from_numpy(_condensing_weights(size_a, size_b, in_channels)), requires_grad=False)
 
     def forward(self, data, mask, bilateral):

@@ -1,8 +1,8 @@
 import warnings
 
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import numpy as np
+from matplotlib import cm
 
 BBOX_CONNS = {
     '2D': frozenset([(0, 1), (0, 2), (1, 3), (2, 3)]),

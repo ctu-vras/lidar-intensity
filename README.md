@@ -24,8 +24,12 @@ Some notable changes from the original repository:
 - 4 cameras which switch themselves sitting atop a car to simulate lidar, each with 65 VFOV (~91 HFOV)
 - It is made substantially more lightweight in order to keep only necessary parts.
 
+First go through GTA directory to setup the GTA plugins and collect dataset
+
+Then go through python directory, to compute velodyne-like points.
+
+In order to predict intensity, use `python/model_eval.py`, the best model checkpoint can be downloaded from [here](https://login.rci.cvut.cz/data/lidar_intensity/model/best.tar)
+
 ### TODO
 
 - [ ] GTA configs
-- [ ] Python Readme
-- [ ] Full README

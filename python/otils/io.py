@@ -46,9 +46,7 @@ def load_multi_yml(filename, merge=True):
     with open(filename, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
     files = [osp.join(basename, d) for d in data]
-    return hiyapyco.load(
-        *files, method=hiyapyco.METHOD_MERGE if merge else hiyapyco.METHOD_SIMPLE, mergelists=False, usedefaultyamlloader=False
-    )
+    return hiyapyco.load(*files, method=hiyapyco.METHOD_MERGE if merge else hiyapyco.METHOD_SIMPLE, mergelists=False, usedefaultyamlloader=False)
 
 
 __all__ = [name for name in globals() if not (name.startswith('_') or isinstance(globals()[name], types.ModuleType))]

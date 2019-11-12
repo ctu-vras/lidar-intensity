@@ -10,3 +10,5 @@ torch
 tqdm
 py3nvml
 psutil
+psycopg2
+multiprocess

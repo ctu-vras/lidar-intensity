@@ -35,11 +35,7 @@ def _tarinfo_filter(tarinfo: tf.TarInfo) -> typing.Optional[tf.TarInfo]:
 
 
 def store_checkpoint(
-    basename,
-    data=None,
-    modules: typing.Optional[typing.Sequence[types.ModuleType]] = None,
-    time_format='%y-%m-%d--%H-%M-%S',
-    overwrite=False,
+    basename, data=None, modules: typing.Optional[typing.Sequence[types.ModuleType]] = None, time_format='%y-%m-%d--%H-%M-%S', overwrite=False
 ):
     if overwrite:
         mode = 'w'
@@ -91,9 +87,7 @@ def load_checkpoint(filename, reload_modules=True):
                         for key, mod in frame.f_globals.items():
                             if not isinstance(mod, types.ModuleType):
                                 continue
-                            if (
-                                mod.__name__ == module.__name__
-                            ):  # Find if the module with the same name is already there, and if it is, reload
+                            if mod.__name__ == module.__name__:  # Find if the module with the same name is already there, and if it is, reload
                                 frame.f_globals[key] = module
                                 break
                 except ImportError:

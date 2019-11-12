@@ -149,7 +149,7 @@ class _AttribEx(DataAttrib):
             return os.path.exists(fname)
         _name = getattr(inst, '_' + self._attrib_name)
         return not isinstance(_name, _mystr) or os.path.exists(_name)
-    
+
     def __delete__(self, inst):
         raise AttributeError(f'Can\'t delete {self._own_name} from {inst.__class__.__name__}!')
 

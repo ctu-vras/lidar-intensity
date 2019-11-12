@@ -112,7 +112,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
         mats = []
         clazz = []
         for entity in entities:
-            pts = list(it.product(*npa(entity['model_sizes']).reshape((3, 2)).tolist()))
+            pts = list(it.product(*npa(entity['model_size']).reshape((3, 2)).tolist()))
             world_pts = ot.visual.rot_mat(npa(entity['rot'])) @ npa(pts).T + npa(entity['pos'])[:, None]
             ego_pts = ot.visual.fromhomo(view @ ot.visual.tohomo(world_pts))
             if self.bbox is not None:
@@ -127,7 +127,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
             nworld = ot.visual.tohomo(world_pts)
             mat = np.concatenate((nworld[:, [1, 2, 4]] - nworld[:, [0]], nworld[:, [0]]), 1)
             mats.append(np.linalg.inv(mat))
-            clazz_val = CarClass.__members__.get(entity['class'], None)
+            clazz_val = CarClass.__members__.get(entity['clazz'], None)
             if clazz_val is None:
                 value = (2, 2)
             else:
@@ -137,7 +137,7 @@ class GTAEntry(ot.dataset.DatasetEntry):
             im_pts[0] = (im_pts[0] + 1) * (width / 2)
             im_pts[1] = (im_pts[1] - 1) * (-height / 2)
             bbox3d.append(im_pts)
-            colors.append((255, 0, 0, 255) if entity['type'] == 'person' else (0, 255, 0, 255))
+            colors.append((255, 0, 0, 255) if entity['typ'] == 'person' else (0, 255, 0, 255))
             bbox2d.append(npa(list(it.product(*np.stack((im_pts.min(1), im_pts.max(1)), -1)))).T)
             world.append(world_pts)
         return {'bbox3d': npa(bbox3d), 'bbox2d': npa(bbox2d), 'colors': npa(colors), 'world': npa(world), 'mats': npa(mats), 'clazz': npa(clazz)}

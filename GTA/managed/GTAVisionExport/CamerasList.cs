@@ -37,9 +37,6 @@ namespace GTAVisionExport
             var parser = new FileIniDataParser();
             var data = parser.ReadFile(Path.Combine(VisionExport.Location, "GTAVision.ini"));
             gameplayInterval = Convert.ToInt32(data["MultiCamera"]["GameplayTimeAfterSwitch"]);
-//            gameCam = World.RenderingCamera;
-
-//            mainCamera.IsActive = false;
 
             initialized = true;
         }
@@ -92,19 +89,6 @@ namespace GTAVisionExport
             activeCameraPosition = mainCameraPosition;
         }
 
-        public static void ActivateGameplayCamera()
-        {
-            if (!initialized)
-                throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
-
-            if (mainCamera == null) throw new Exception("please, set main camera");
-
-            mainCamera.IsActive = false;
-            World.RenderingCamera = null;
-            activeCameraRotation = GameplayCamera.Rotation;
-            activeCameraPosition = GameplayCamera.Position;
-        }
-
         public static Vector3 rotationMatrixToDegrees(Matrix<double> r)
         {
             var sy = Math.Sqrt(r[0, 0] * r[0, 0] + r[1, 0] * r[1, 0]);
@@ -142,8 +126,8 @@ namespace GTAVisionExport
             cameras[i].IsActive = true;
             World.RenderingCamera = cameras[i];
             cameras[i].AttachTo(Game.Player.Character.CurrentVehicle, camerasPositions[i]);
-//            if we want to rotate camera relatively to the car, we must do through rotation matrix multiplication, not addition
-//            cameras[i].Rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];    // this row is wrong
+
+            // computing correct rotation
             var rot = Game.Player.Character.CurrentVehicle.Rotation;
             var rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
             var rotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(rot.Y));
@@ -153,17 +137,34 @@ namespace GTAVisionExport
             var relRotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(camerasRotations[i].Y));
             var relRotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(camerasRotations[i].Z));
             var relRotMat = relRotZ * relRotY * relRotX;
-
-//            cameras[i].Rotation = rotationMatrixToDegrees(relRotMat * rotMat);
             var rotmatdeg = rotationMatrixToDegrees(rotMat * relRotMat);
             cameras[i].Rotation = rotmatdeg;
             Script.Wait(gameplayInterval.Value);
             Game.Pause(true);
-            Logger.WriteLine("new camera position is: " + World.RenderingCamera.Position);
+            
+            // computing position and rotation manually to be able to find diff
+            rot = Game.Player.Character.CurrentVehicle.Rotation;
+            rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
+            rotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(rot.Y));
+            rotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(rot.Z));
+            rotMat = rotZ * rotY * rotX;
+            rotmatdeg = rotationMatrixToDegrees(rotMat * relRotMat);
+            
+            var vector = Vector<double>.Build.Dense(3);
+            vector[0] = camerasPositions[i].X;
+            vector[1] = camerasPositions[i].Y;
+            vector[2] = camerasPositions[i].Z;
+            var rotVec = rotMat * vector;
+            var computed = new Vector3();
+            computed.X = (float) rotVec[0];
+            computed.Y = (float) rotVec[1];
+            computed.Z = (float) rotVec[2];
+            computed += Game.Player.Character.CurrentVehicle.Position;
+            
+            Logger.WriteLine("Computed camera position is: " + computed);
+            Logger.WriteLine("New camera position is: " + World.RenderingCamera.Position);
             Logger.WriteLine("Computed camera rotation is: " + rotmatdeg);
-            Logger.WriteLine("new camera rotation is: " + World.RenderingCamera.Rotation);
-            Logger.WriteLine("new camera position offset is: " + camerasPositions[i]);
-            Logger.WriteLine("new camera rotation offset is: " + camerasRotations[i]);
+            Logger.WriteLine("New camera rotation is: " + World.RenderingCamera.Rotation);
             activeCameraRotation = camerasRotations[i];
             activeCameraPosition = camerasPositions[i];
             return cameras[i];
