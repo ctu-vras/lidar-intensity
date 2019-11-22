@@ -15,7 +15,7 @@ cmake				: https://cmake.org/download/
 
 Eigen3				: https://bitbucket.org/eigen/eigen/downloads/?tab=tags
 
-MS Visual Studio 2017 		: https://www.visualstudio.com/cs/downloads/
+MS Visual Studio 2019 		: https://www.visualstudio.com/cs/downloads/
 
 MSBuild.exe in `PATH` variable, version 141.
 
@@ -35,13 +35,10 @@ Build steps
 11. cmake should now have generated the Visual Studio solution into GTAVisionExport/build.
 12. Open 'GTANativePlugin.sln' in Visual Studio.
 13. Select 'release' from the 'Solution Configurations' drop down.
-14. Edit GTAVisionNative project properties/configuration properties/c/c++/additional include dirs in VS to add the GTAVisionExport/native/src folder (this allows VS to find MinHook.h)
-15. Edit GTAVisionNative project properties/configuration properties/linker/input/additional dependencies to add : 
-`"..\..\deps\libMinHook.x64.lib"` 
-16. Press F6 to build the solution. it should now succeed and the products should be in 'GTAVisionExport\native\build\src\Release'
-17. Copy GTAVisionNative.asi & GTAVisionNative.lib to your GTAV exe folder.
-18. Run GTAV.
-19. Get to a place where you want to grab frames and press 'l' (lowercase 'L') to grab a frame. GTAVisionExport should now create color.raw, stencil.raw and depth.raw files in your GTAV exe folder.
+14. Press F6 to build the solution. it should now succeed and the products should be in 'GTAVisionExport\native\build\src\Release'
+15. Copy GTAVisionNative.asi & GTAVisionNative.lib to your GTAV exe folder.
+16. Run GTAV.
+17. Get to a place where you want to grab frames and press 'l' (lowercase 'L') to grab a frame. GTAVisionExport should now create color.raw, stencil.raw and depth.raw files in your GTAV exe folder.
 
 HTH
 
