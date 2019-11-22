@@ -8,7 +8,6 @@ from setuptools.extension import Extension
 if platform.system() == 'Windows':
     kwargs = {
         'extra_compile_args': ['/openmp', '/O2'],
-        'extra_link_args': ['/openmp', '/O2'],
     }
 else:
     kwargs = {
