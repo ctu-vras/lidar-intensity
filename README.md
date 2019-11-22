@@ -30,6 +30,6 @@ Then go through python directory, to compute velodyne-like points.
 
 In order to predict intensity, use `python/model_eval.py`, the best model checkpoint can be downloaded from [here](https://login.rci.cvut.cz/data/lidar_intensity/model/best.tar)
 
-### TODO
+
 
 - [ ] GTA configs
