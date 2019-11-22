@@ -3,8 +3,6 @@
 import argparse
 
 import psutil
-import psycopg2
-import psycopg2.extras
 import yaml
 
 import gta
@@ -13,15 +11,13 @@ CONFIG_FILE = 'gta.yml'
 
 
 def run(parsed_args):
-    conn = psycopg2.connect(dsn=parsed_args.conn_string, cursor_factory=psycopg2.extras.NamedTupleCursor)
-    cursor = conn.cursor()
-    parsed_args.cursor = cursor
+    conn = gta.db.open_connection(parsed_args)
     args.log_data = gta.io.load_log_file(args)
     gta.db.get_runs(parsed_args)
     for run_id in parsed_args.runs:
         gta.db.process_run(run_id, parsed_args)
     conn.commit()
-    cursor.close()
+    parsed_args.cursor.close()
     conn.close()
 
 

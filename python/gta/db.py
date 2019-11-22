@@ -1,8 +1,10 @@
-import functools
+import copy
 import math
 
 import multiprocess as mp
 import numpy as np
+import psycopg2
+import psycopg2.extras
 
 from . import io, query
 
@@ -41,7 +43,8 @@ def process_snapshot(snapshot, prev, img_id, args):
     return True, dataitem
 
 
-def process_scene(img_id, scene_id, args):
+def process_scene(img_id, scene_id):
+    args = globals()['args']
     img_id = img_id * args.num_cameras
     args.cursor.execute(query.SNAPSHOTS, (args.current_run_id, scene_id))
     snapshots = args.cursor.fetchall()
@@ -106,8 +109,10 @@ def process_run(run_id, args):
     args.format_width = math.ceil(math.log10(num_snapshots + 1))
     if args.verbose:
         print(f'There are {num_snapshots} snaphots for run {run_id}')
+    no_conn_args = copy.deepcopy(args)
+    del no_conn_args.cursor
     with mp.Pool(args.num_processes) as pool:
-        pool.starmap(functools.partial(process_scene, args=args), enumerate(scene_ids))
+        pool.starmap(process_scene, enumerate(scene_ids))
     io.rearrange_files(args)
     if reset:
         args.num_cameras = None
@@ -125,3 +130,12 @@ def get_scene_ids(cursor, run_id):
         results.append(result.scene_id)
         last_scene_id = result.scene_id
     return results
+
+
+def open_connection(pargs, set_global=False):
+    conn = psycopg2.connect(dsn=pargs.conn_string, cursor_factory=psycopg2.extras.NamedTupleCursor)
+    cursor = conn.cursor()
+    pargs.cursor = cursor
+    if set_global:
+        globals()['args'] = pargs
+    return conn
