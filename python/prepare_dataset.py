@@ -2,6 +2,7 @@
 
 import argparse
 
+import psutil
 import psycopg2
 import psycopg2.extras
 import yaml
@@ -50,6 +51,13 @@ def parse_args():
     parser.add_argument('-od', '--output_dir', default=None, type=str, help='Output directory')
     parser.add_argument('-id', '--in_dir', default=None, type=str, help='input directory')
     parser.add_argument('-nc', '--num_cameras', type=int, default=None, help='Number of cameras. Could be None to infer from database for each run')
+    parser.add_argument(
+        '-np',
+        '--num_processes',
+        type=int,
+        default=None,
+        help='Number of processes to launch. If left at None, it wiill default to half of available CPUs',
+    )
     parser.add_argument('-lf', '--log_file', type=str, default=None, help='Log file from managed GTA plugin. It helps to correct malformed data.')
     needs_all = parser.add_mutually_exclusive_group()
     needs_all.add_argument('-na', '--needs_all', default=None, action='store_true', help='Whether all cameras from one scene are needed')
@@ -91,12 +99,16 @@ def parse_args():
     parsed = process_field(parsed, yaml_config, 'output_dir')
     parsed = process_field(parsed, yaml_config, 'in_dir')
     parsed = process_field(parsed, yaml_config, 'num_cameras', fail=False)
+    parsed = process_field(parsed, yaml_config, 'num_processes', fail=False)
     parsed = process_field(parsed, yaml_config, 'needs_all')
     parsed = process_field(parsed, yaml_config, 'all_runs')
     parsed = process_field(parsed, yaml_config, 'log_file')
     parsed = process_field(parsed, yaml_config, 'delete_originals')
     parsed = process_field(parsed, yaml_config, 'delete_invalid')
     parsed = process_field(parsed, yaml_config, 'runs', fail=not parsed.all_runs)
+
+    if parsed.num_processes is None:
+        parsed.num_processes = int(psutil.cpu_count() / 2)
 
     return parsed
 

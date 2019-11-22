@@ -1,5 +1,7 @@
+import functools
 import math
 
+import multiprocess as mp
 import numpy as np
 
 from . import io, query
@@ -24,8 +26,8 @@ def failed_result(snapshots, dataitems, index, args):
                 io.delete_created_files([dataitem], args)
 
 
-def process_snapshot(snapshot, prev, args):
-    dataitem = io.Snapshot(snapshot)
+def process_snapshot(snapshot, prev, img_id, args):
+    dataitem = io.Snapshot(snapshot, img_id)
     if not dataitem.load_rgb(args):
         return False, dataitem
     if not dataitem.load_depth(args):
@@ -39,8 +41,9 @@ def process_snapshot(snapshot, prev, args):
     return True, dataitem
 
 
-def process_scene(scene_id, run_id, args):
-    args.cursor.execute(query.SNAPSHOTS, (run_id, scene_id))
+def process_scene(img_id, scene_id, args):
+    img_id = img_id * args.num_cameras
+    args.cursor.execute(query.SNAPSHOTS, (args.current_run_id, scene_id))
     snapshots = args.cursor.fetchall()
     if len(snapshots) != args.num_cameras:
         for i in range(len(snapshots)):
@@ -52,7 +55,7 @@ def process_scene(scene_id, run_id, args):
     dataitems = []
     prev = None
     for i, snapshot in enumerate(snapshots):
-        result, prev = process_snapshot(snapshot, prev, args)
+        result, prev = process_snapshot(snapshot, prev, img_id + i, args)
         if not result:
             failed_result(snapshots, None, i, args)
             if args.needs_all:
@@ -60,16 +63,13 @@ def process_scene(scene_id, run_id, args):
             continue
         dataitems.append(prev)
 
-    started_img_id = args.img_id
     for i, dataitem in enumerate(dataitems):
         result = dataitem.save_snapshot(args)
         if not result:
             failed_result(snapshots, dataitems, i, args)
             if args.needs_all:
-                args.img_id = started_img_id
                 return
             continue
-        args.img_id += 1
 
 
 def get_runs(args):
@@ -106,9 +106,9 @@ def process_run(run_id, args):
     args.format_width = math.ceil(math.log10(num_snapshots + 1))
     if args.verbose:
         print(f'There are {num_snapshots} snaphots for run {run_id}')
-    args.img_id = 0
-    for scene_id in scene_ids:
-        process_scene(scene_id, run_id, args)
+    with mp.Pool(args.num_processes) as pool:
+        pool.starmap(functools.partial(process_scene, args=args), enumerate(scene_ids))
+    io.rearrange_files(args)
     if reset:
         args.num_cameras = None
     if (args.img_id == 0 and args.delete_invalid) or args.delete_originals:

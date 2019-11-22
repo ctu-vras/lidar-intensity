@@ -1,4 +1,6 @@
+import glob
 import json
+import math
 import os
 import re
 
@@ -38,11 +40,11 @@ LOG_PATTERN = re.compile(LOG_REGEX, re.VERBOSE | re.MULTILINE)
 @attr.s
 class Snapshot:
     snapshot_data = attr.ib()
+    img_id = attr.ib()
     rgb = attr.ib(init=False)
     depth = attr.ib(init=False)
     stencil = attr.ib(init=False)
     meta = attr.ib(init=False)
-    img_id = attr.ib(init=False)
 
     def load_rgb(self, args):
         try:
@@ -101,7 +103,7 @@ class Snapshot:
         return True
 
     def save_snapshot(self, args):
-        file_base = os.path.join(args.output_dir, f'{args.current_run_id}', 'orig', '{dir_kind}', f'{args.img_id:0{args.format_width}d}' + '{suf}')
+        file_base = os.path.join(args.output_dir, f'{args.current_run_id}', 'orig', '{dir_kind}', f'{self.img_id:0{args.format_width}d}' + '{suf}')
         for d, suf, att, save in zip(OUT_DIRS, OUT_SUFFICES, OUT_ATTRS, OUT_SAVERS):
             fname = file_base.format(dir_kind=d, suf=suf)
             data = getattr(self, att)
@@ -112,7 +114,6 @@ class Snapshot:
                 if args.verbose:
                     print(f'Failed to save file {fname}! Error was: {e}')
                 return False
-        self.img_id = args.img_id
         if args.delete_originals:
             delete_orig_files([self.snapshot_data], args)
         return True
@@ -168,3 +169,24 @@ def load_log_file(args):
             matchdict[key] = np.array(list(map(lambda x: float(x[2:]), val.split())))
         result[filename] = matchdict
     return result
+
+
+def rearrange_files(args):
+    file_base_search = os.path.join(args.output_dir, f'{args.current_run_id}', 'orig', '{dir_kind}', '*{suf}')
+    last_len = None
+    for d, s in zip(OUT_DIRS, OUT_SUFFICES):
+        file_search = file_base_search.format(dir_kind=d, suf=s)
+        files = sorted(glob.glob(file_search))
+        if last_len is None:
+            last_len = len(files)
+        else:
+            if last_len != len(files):
+                print(
+                    'Whoa, something is seriously wrong! You have different amount of files in each dir!'
+                    'I strongly suggest to remove this result and investigate!'
+                )
+        args.format_width = math.ceil(math.log10(len(files) + 1))
+        file_rename = file_search.replace('*', f'{{:0{args.format_width}d}}')
+        for i, fname in enumerate(files):
+            os.rename(fname, file_rename.format(i))
+    return last_len
