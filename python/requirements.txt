@@ -6,7 +6,7 @@ PyYAML
 attrs
 dill
 Cython
-torch
+pytorch
 tqdm
 py3nvml
 psutil
