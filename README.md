@@ -30,6 +30,10 @@ Then go through python directory, to compute velodyne-like points.
 
 In order to predict intensity, use `python/model_eval.py`, the best model checkpoint can be downloaded from [here](https://login.rci.cvut.cz/data/lidar_intensity/model/best.tar)
 
+### Configs
 
+Folder configs contains configs for starting either `python/model_eval.py` or `python/model_train.py`. Each config in the toplevel `configs` directory is a list of configs from includes, which are merged together. The order is important, if there are two same keys in different included files, the one that was included later is kept.
 
-- [ ] GTA configs
+You will probably want to change `configs/includes/{gta,kitti}data/basedata.yml` and `config/includes/{gta,kitti}data/segment_data.yml`, which contains paths for data.
+
+Configs `configs/includes/{reflect,segment}_configs/model*.yml` contain directories, where checkpoints are stored. You probably want to change that too.

@@ -1,0 +1,12 @@
+val:
+  channels:
+    - name: rgb
+      start: 5
+      end: 8
+      retype: f4
+train:
+  channels:
+    - name: rgb
+      start: 5
+      end: 8
+      retype: f4
