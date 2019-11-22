@@ -109,10 +109,16 @@ def process_run(run_id, args):
     args.format_width = math.ceil(math.log10(num_snapshots + 1))
     if args.verbose:
         print(f'There are {num_snapshots} snaphots for run {run_id}')
+
+    # ugliness due to multiprocess
+    cursor = args.cursor
+    del args.cursor
     no_conn_args = copy.deepcopy(args)
-    del no_conn_args.cursor
-    with mp.Pool(args.num_processes) as pool:
+    args.cursor = cursor
+
+    with mp.Pool(args.num_processes, initializer=open_connection, initargs=(no_conn_args, True)) as pool:
         pool.starmap(process_scene, enumerate(scene_ids))
+        pool.map(close_conn_mp, range(args.num_processes), 1)
     io.rearrange_files(args)
     if reset:
         args.num_cameras = None
@@ -136,6 +142,13 @@ def open_connection(pargs, set_global=False):
     conn = psycopg2.connect(dsn=pargs.conn_string, cursor_factory=psycopg2.extras.NamedTupleCursor)
     cursor = conn.cursor()
     pargs.cursor = cursor
+    pargs.conn = conn
     if set_global:
         globals()['args'] = pargs
-    return conn
+
+
+def close_conn_mp(_):
+    args = globals()['args']
+    args.conn.commit()
+    args.cursor.close()
+    args.conn.close()

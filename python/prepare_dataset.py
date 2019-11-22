@@ -11,14 +11,14 @@ CONFIG_FILE = 'gta.yml'
 
 
 def run(parsed_args):
-    conn = gta.db.open_connection(parsed_args)
+    gta.db.open_connection(parsed_args)
     args.log_data = gta.io.load_log_file(args)
     gta.db.get_runs(parsed_args)
     for run_id in parsed_args.runs:
         gta.db.process_run(run_id, parsed_args)
-    conn.commit()
+    parsed_args.conn.commit()
     parsed_args.cursor.close()
-    conn.close()
+    parsed_args.conn.close()
 
 
 def process_field(parsed_args, yaml_config, field, fail=True):
