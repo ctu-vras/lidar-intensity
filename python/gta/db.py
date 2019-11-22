@@ -111,10 +111,10 @@ def process_run(run_id, args):
         print(f'There are {num_snapshots} snaphots for run {run_id}')
 
     # ugliness due to multiprocess
-    cursor = args.cursor
-    del args.cursor
+    cursor, conn = args.cursor, args.conn
+    del args.cursor, args.conn
     no_conn_args = copy.deepcopy(args)
-    args.cursor = cursor
+    args.cursor, args.conn = cursor, conn
 
     with mp.Pool(args.num_processes, initializer=open_connection, initargs=(no_conn_args, True)) as pool:
         pool.starmap(process_scene, enumerate(scene_ids))
