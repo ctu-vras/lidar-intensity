@@ -119,10 +119,10 @@ def process_run(run_id, args):
     with mp.Pool(args.num_processes, initializer=open_connection, initargs=(no_conn_args, True)) as pool:
         pool.starmap(process_scene, enumerate(scene_ids))
         pool.map(close_conn_mp, range(args.num_processes), 1)
-    io.rearrange_files(args)
+    num_files = io.rearrange_files(args)
     if reset:
         args.num_cameras = None
-    if (args.img_id == 0 and args.delete_invalid) or args.delete_originals:
+    if (num_files == 0 and args.delete_invalid) or args.delete_originals:
         args.cursor.execute(query.DELETE_RUN, (run_id,))
 
 
