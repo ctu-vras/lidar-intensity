@@ -149,8 +149,8 @@ def open_connection(pargs, set_global=False):
 
 def close_conn_mp(_):
     args = globals()['args']
-    args.conn.commit()
     if not args.cursor.closed:
         args.cursor.close()
     if not args.conn.closed:
+        args.conn.commit()
         args.conn.close()
