@@ -1,9 +1,10 @@
 import sys
 
-import inten
-import torchutils as tu
 import torch.utils.data as data
+
+import inten
 import otils as ot
+import torchutils as tu
 
 if __name__ == '__main__':
     config = ot.io.load_multi_yml(sys.argv[1])

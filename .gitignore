@@ -1,6 +1,7 @@
 .vscode
 __pycache__
-*.py[co]
+*.py[cod]
 .mypy_cache
 build
 *.so
+dataset

@@ -113,9 +113,7 @@ class EvalRunner(tu.Runner):
         for i in range(len(batch['key'])):
             result, score = self.image_fn(batch, output, i)
             os.makedirs(self.store_dir, exist_ok=True)
-            Image.fromarray(result).save(
-                osp.join(self.store_dir, f'{score:.4f}-{osp.splitext(osp.basename(dataset.files[batch["key"][i]]))[0]}.png')
-            )
+            Image.fromarray(result).save(osp.join(self.store_dir, f'{score:.4f}-{osp.splitext(osp.basename(dataset.files[batch["key"][i]]))[0]}.png'))
         info = self.info_fn(batch, output)
         if self.info_accum[(dataset, mode)] is None:
             self.info_accum[(dataset, mode)] = info
@@ -218,6 +216,7 @@ class Runner(tu.Runner):
     def __call__(self, dataloader, mode):
         super().__call__(dataloader, mode)
         return sum(self.run_losses[dataloader.dataset]) / len(dataloader.dataset)
+
 
 class RGB2GSRunner(EvalRunner):
     def __init__(self, config):

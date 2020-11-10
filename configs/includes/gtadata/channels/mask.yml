@@ -1,0 +1,12 @@
+val:
+  channels:
+    - name: mask
+      start: 9
+      end: null
+      retype: f4
+train:
+  channels:
+    - name: mask
+      start: 9
+      end: null
+      retype: f4

@@ -1,0 +1,9 @@
+conn_string: dbname='postgres' user='postgres' host='localhost' password='postgres'
+output_dir: ../dataset_new
+in_dir: ../dataset/velodyne
+needs_all: true
+all_runs: true
+verbose: on
+log_file: ../dataset/dataset.log
+delete_originals: on
+delete_invalid: on

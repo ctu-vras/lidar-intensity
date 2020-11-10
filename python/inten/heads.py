@@ -27,8 +27,7 @@ class TransformHead(nn.Module):
             data_in = data_input[:, self.start_dim : self.start_dim + self.dim, ...]
             if self.affine:
                 data_in = torch.cat(
-                    (data_in, torch.ones(data_input.shape[0], 1, *data_input.shape[2:], device=data_input.device, dtype=data_input.dtype)),
-                    1,
+                    (data_in, torch.ones(data_input.shape[0], 1, *data_input.shape[2:], device=data_input.device, dtype=data_input.dtype)), 1
                 )
             old_shape = data_in.shape
             data_in = data_in.view((*old_shape[:2], -1))
@@ -62,9 +61,7 @@ class ReflectHead(nn.Module):
     def __init__(self, in_channels, mid_channels, return_value=False):
         super().__init__()
         self.ranges = nn.Parameter(
-            torch.tensor(
-                [0.07952585, 0.08348164, 0.06294145, 0.03815826, 0.02533704, 0.02099525, 0.02404286, 0.03440835, 0.17729683, 0.45381247]
-            ),
+            torch.tensor([0.07952585, 0.08348164, 0.06294145, 0.03815826, 0.02533704, 0.02099525, 0.02404286, 0.03440835, 0.17729683, 0.45381247]),
             requires_grad=False,
         )
         self.mins = nn.Parameter(

@@ -6,7 +6,9 @@ PyYAML
 attrs
 dill
 Cython
-torch
+pytorch
 tqdm
 py3nvml
 psutil
+psycopg2
+multiprocess
