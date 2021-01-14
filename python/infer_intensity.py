@@ -18,10 +18,10 @@ if __name__ == "__main__":
     config = otils.io.load_multi_yml('../configs/eval.reflect-l2.depth.rgb.yml')
     config['device'] = 'cpu'
     runner = inten.data.EvalRunner(config)
-    with open('intensity_weights.pkl', 'rb') as f:
-        weights = pickle.load(f)
 
-    runner.model.load_state_dict(weights['state_dict'])
+    weights = torch.load('intensity_weights.pt')
+
+    runner.model.load_state_dict(weights)
 
     for file in grid:
         with torch.no_grad():
