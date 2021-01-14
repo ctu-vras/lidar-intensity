@@ -7,3 +7,5 @@
 2. Then run `create_velodynes.py` in order to create velodyne-like data.
 
 Scripts `model_eval.py` and `model_run.py` are helpers to run PyTorch models specified by configs
+
+Alternatively, you can use 'infer_intensity.py' to transform lidar sweeps grid into point cloud with learned intensity
