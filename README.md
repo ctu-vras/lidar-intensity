@@ -28,7 +28,7 @@ First go through GTA directory to setup the GTA plugins and collect dataset
 
 Then go through python directory, to compute velodyne-like points.
 
-In order to predict intensity, use `python/model_eval.py`, the best model checkpoint can be downloaded from [here](https://login.rci.cvut.cz/data/lidar_intensity/model/best.tar)
+In order to predict intensity run 'python/infer_intensity.py' with first argument with path to source folder, where grid lidar sweeps are, and second argument output directory, where you want your point clouds with intensity stored. Point clouds will have channels: Depth, X, Y, Z, Intensity, Label, Red, Green, Blue, Color_mask, Returned_ray_mask
 
 ### Configs
 
